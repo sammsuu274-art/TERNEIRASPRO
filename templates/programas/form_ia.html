@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Registrar IA{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h5 class="mb-0 fw-bold">Registrar cobertura/IA — {{ terneira.identificacao }}</h5></div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">{{ form.data.label_tag }}{{ form.data }}</div>
+            <div class="col-md-4">{{ form.tipo.label_tag }}{{ form.tipo }}</div>
+            <div class="col-md-4">{{ form.numero_servico.label_tag }}{{ form.numero_servico }}</div>
+            <div class="col-12">{{ form.touro_semen.label_tag }}{{ form.touro_semen }}</div>
+            <div class="col-md-4">{{ form.peso_na_ia_kg.label_tag }}{{ form.peso_na_ia_kg }}</div>
+            <div class="col-md-4">{{ form.ecc_na_ia.label_tag }}{{ form.ecc_na_ia }}</div>
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'animais:detalhe_terneira' terneira.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success px-4">Registrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+[Unit]
+Description=TerneirasPro - Sistema de Gestão de Terneiras
+After=network.target
+
+[Service]
+Type=simple
+User=victor
+WorkingDirectory=/home/victor/Documentos/victor/Documentos/TERNEIRAS
+ExecStart=/home/victor/Documentos/victor/Documentos/TERNEIRAS/venv/bin/python manage.py runserver 0.0.0.0:8000
+Restart=always
+RestartSec=10
+
+# Variáveis de ambiente
+Environment="PATH=/home/victor/Documentos/victor/Documentos/TERNEIRAS/venv/bin"
+Environment="DJANGO_SETTINGS_MODULE=gestao_terneiras.settings"
+
+[Install]
+WantedBy=multi-user.target

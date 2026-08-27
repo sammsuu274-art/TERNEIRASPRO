@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Selecionar Propriedade{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+  <div class="col-md-6">
+    <h5 class="fw-bold mb-4">Selecione a propriedade</h5>
+    <div class="row g-3">
+      {% for perfil in perfis %}
+      <div class="col-12">
+        <a href="{% url 'core:selecionar_propriedade' perfil.propriedade.pk %}?next=/"
+           class="card border-0 shadow-sm text-decoration-none text-dark kpi-card p-3 d-block">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-bold">{{ perfil.propriedade.nome }}</div>
+              <small class="text-muted">{{ perfil.propriedade.municipio }}{% if perfil.propriedade.estado %}/{{ perfil.propriedade.estado }}{% endif %}</small>
+            </div>
+            <span class="badge bg-success bg-opacity-10 text-success">{{ perfil.get_papel_display }}</span>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

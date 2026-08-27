@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'core:painel_admin' %}">Administração</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'core:lista_vinculos' %}">Vínculos</a></li>
+  <li class="breadcrumb-item active">{{ titulo }}</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-5">
+    <div class="alert alert-info small">
+      <i class="bi bi-info-circle me-2"></i>
+      Vincular um usuário a uma propriedade permite que ele acesse os dados dessa propriedade no sistema com o papel definido.
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h5 class="mb-0 fw-bold">{{ titulo }}</h5></div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger small">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Usuário *</label>
+            {{ form.usuario }}
+            {% if form.usuario.errors %}<div class="text-danger small">{{ form.usuario.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Propriedade *</label>
+            {{ form.propriedade }}
+            {% if form.propriedade.errors %}<div class="text-danger small">{{ form.propriedade.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Papel *</label>
+            {{ form.papel }}
+          </div>
+          <div class="mb-4">
+            <div class="form-check">{{ form.ativo }}<label class="form-check-label ms-2">Vínculo ativo</label></div>
+          </div>
+
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'core:lista_vinculos' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success px-4">
+              <i class="bi bi-check-lg me-1"></i>Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

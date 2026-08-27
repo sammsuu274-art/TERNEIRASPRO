@@ -1,0 +1,164 @@
+[
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 1,
+    "fields": {
+      "indicador": "tempo_colostragem",
+      "descricao": "Tempo máximo para primeira colostragem",
+      "valor_minimo": null,
+      "valor_ideal": 2.0,
+      "valor_maximo": 6.0,
+      "unidade": "horas",
+      "populacao": "Terneiras leiteiras em geral",
+      "fonte": "Godden, 2008 — Veterinary Clinics of North America",
+      "autor": "Godden, S.M.",
+      "ano": 2008,
+      "observacoes": "Absorção de imunoglobulinas diminui progressivamente após o nascimento. Eficiência máxima nas primeiras 2 horas.",
+      "ativo": true
+    }
+  },
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 2,
+    "fields": {
+      "indicador": "volume_colostro",
+      "descricao": "Volume de colostro na primeira mamada",
+      "valor_minimo": 10.0,
+      "valor_ideal": 10.0,
+      "valor_maximo": null,
+      "unidade": "% do peso vivo (ml/kg)",
+      "populacao": "Terneiras leiteiras",
+      "fonte": "Embrapa Gado de Leite",
+      "autor": "Embrapa",
+      "ano": 2020,
+      "observacoes": "Meta mínima: 10% do peso ao nascer em volume de colostro. Ex: terneira de 40 kg → 4 litros.",
+      "ativo": true
+    }
+  },
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 3,
+    "fields": {
+      "indicador": "brix_colostro",
+      "descricao": "Qualidade mínima do colostro por Brix",
+      "valor_minimo": 22.0,
+      "valor_ideal": 25.0,
+      "valor_maximo": null,
+      "unidade": "%",
+      "populacao": "Colostro bovino",
+      "fonte": "Buczinski & Vandeweerd, 2016",
+      "autor": "Buczinski, S.; Vandeweerd, J.M.",
+      "ano": 2016,
+      "observacoes": "Brix ≥ 22% indica colostro de boa qualidade (IgG ≥ 50 g/L). Abaixo de 20% é considerado fraco.",
+      "ativo": true
+    }
+  },
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 4,
+    "fields": {
+      "indicador": "dias_secos",
+      "descricao": "Período seco recomendado",
+      "valor_minimo": 45.0,
+      "valor_ideal": 60.0,
+      "valor_maximo": 75.0,
+      "unidade": "dias",
+      "populacao": "Vacas leiteiras",
+      "fonte": "Embrapa Gado de Leite",
+      "autor": "Embrapa",
+      "ano": 2020,
+      "observacoes": "Período seco < 45 dias compromete a produção na lactação seguinte e a saúde do neonato.",
+      "ativo": true
+    }
+  },
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 5,
+    "fields": {
+      "indicador": "dias_pre_parto",
+      "descricao": "Período mínimo no lote pré-parto",
+      "valor_minimo": 21.0,
+      "valor_ideal": 21.0,
+      "valor_maximo": null,
+      "unidade": "dias",
+      "populacao": "Vacas gestantes — transição",
+      "fonte": "Embrapa Gado de Leite / NRC 2001",
+      "autor": "Embrapa / NRC",
+      "ano": 2020,
+      "observacoes": "Mínimo de 21 dias no pré-parto para adaptação ruminal à dieta de transição e redução de distúrbios metabólicos.",
+      "ativo": true
+    }
+  },
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 6,
+    "fields": {
+      "indicador": "gmd_aleitamento",
+      "descricao": "GMD desejado durante o aleitamento",
+      "valor_minimo": 0.7,
+      "valor_ideal": 0.8,
+      "valor_maximo": null,
+      "unidade": "kg/dia",
+      "populacao": "Terneiras Holandesas em aleitamento",
+      "fonte": "Embrapa Gado de Leite",
+      "autor": "Embrapa",
+      "ano": 2020,
+      "observacoes": "Aleitamento intensivo pode atingir 0,9–1,0 kg/dia. Aleitamento convencional 0,6–0,8 kg/dia.",
+      "ativo": true
+    }
+  },
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 7,
+    "fields": {
+      "indicador": "mortalidade_60d",
+      "descricao": "Taxa de mortalidade aceitável até 60 dias",
+      "valor_minimo": null,
+      "valor_ideal": 2.0,
+      "valor_maximo": 5.0,
+      "unidade": "%",
+      "populacao": "Terneiras leiteiras até 60 dias",
+      "fonte": "USDA NAHMS Dairy Study",
+      "autor": "USDA",
+      "ano": 2014,
+      "observacoes": "Mortalidade > 5% até 60 dias indica problemas de manejo, colostragem ou sanidade.",
+      "ativo": true
+    }
+  },
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 8,
+    "fields": {
+      "indicador": "incidencia_diarreia",
+      "descricao": "Incidência de diarreia aceitável",
+      "valor_minimo": null,
+      "valor_ideal": 15.0,
+      "valor_maximo": 25.0,
+      "unidade": "%",
+      "populacao": "Terneiras leiteiras — fase neonatal",
+      "fonte": "Embrapa Gado de Leite",
+      "autor": "Embrapa",
+      "ano": 2020,
+      "observacoes": "Incidência > 25% indica necessidade de revisão dos protocolos de colostragem e manejo.",
+      "ativo": true
+    }
+  },
+  {
+    "model": "config_tecnica.referencialTecnico",
+    "pk": 9,
+    "fields": {
+      "indicador": "incidencia_pneumonia",
+      "descricao": "Incidência de pneumonia aceitável",
+      "valor_minimo": null,
+      "valor_ideal": 10.0,
+      "valor_maximo": 15.0,
+      "unidade": "%",
+      "populacao": "Terneiras leiteiras",
+      "fonte": "Embrapa Gado de Leite",
+      "autor": "Embrapa",
+      "ano": 2020,
+      "observacoes": "Pneumonia é a principal causa de mortalidade após os 30 dias. Incidência > 15% exige revisão das instalações e manejo.",
+      "ativo": true
+    }
+  }
+]

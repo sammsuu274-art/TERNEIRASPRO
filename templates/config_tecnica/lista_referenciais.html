@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Referenciais Técnicos{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block page_header %}
+<h4 class="fw-bold mb-4"><i class="bi bi-book text-info me-2"></i>Referenciais Técnicos</h4>
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Indicador</th><th>Valor recomendado</th><th>Unidade</th><th>Fonte</th><th>Ano</th><th>População</th></tr>
+        </thead>
+        <tbody>
+          {% for r in referenciais %}
+          <tr>
+            <td class="fw-semibold small">{{ r.get_indicador_display }}</td>
+            <td class="small">
+              {% if r.valor_minimo and r.valor_maximo %}
+                {{ r.valor_minimo }} – {{ r.valor_maximo }}
+              {% elif r.valor_ideal %}
+                {{ r.valor_ideal }}
+              {% else %}—{% endif %}
+            </td>
+            <td class="small text-muted">{{ r.unidade }}</td>
+            <td class="small text-muted">{{ r.fonte }}</td>
+            <td class="small text-muted">{{ r.ano|default:"—" }}</td>
+            <td class="small text-muted">{{ r.populacao }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-4">Nenhum referencial cadastrado.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

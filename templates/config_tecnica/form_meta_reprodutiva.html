@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Nova Meta Reprodutiva{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'config_tecnica:lista_metas_reprodutivas' %}">Metas Reprodutivas</a></li>
+  <li class="breadcrumb-item active">Nova</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="alert alert-info small">
+      <i class="bi bi-info-circle me-2"></i>
+      <strong>Referência Embrapa:</strong> Holandês 330–340 kg | Jersey 230–240 kg | Percentual recomendado: 50–55% do peso adulto.
+      A decisão final de inseminação cabe sempre ao responsável técnico.
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h5 class="mb-0 fw-bold">Nova Meta Reprodutiva</h5></div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="form-section-title">Identificação</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-8">{{ form.nome.label_tag }}{{ form.nome }}</div>
+            <div class="col-md-4">{{ form.raca.label_tag }}{{ form.raca }}</div>
+          </div>
+          <div class="form-section-title">Critério de peso</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">{{ form.peso_adulto_medio_kg.label_tag }}{{ form.peso_adulto_medio_kg }}</div>
+            <div class="col-md-4">{{ form.percentual_peso_adulto.label_tag }}{{ form.percentual_peso_adulto }}</div>
+            <div class="col-md-4">{{ form.peso_minimo_kg.label_tag }}{{ form.peso_minimo_kg }}</div>
+          </div>
+          <div class="form-section-title">Critérios de desenvolvimento</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-3">{{ form.ecc_minimo.label_tag }}{{ form.ecc_minimo }}</div>
+            <div class="col-md-3">{{ form.idade_minima_meses.label_tag }}{{ form.idade_minima_meses }}</div>
+            <div class="col-md-3">{{ form.idade_alvo_meses.label_tag }}{{ form.idade_alvo_meses }}</div>
+            <div class="col-md-3">{{ form.gmd_minimo_recria.label_tag }}{{ form.gmd_minimo_recria }}</div>
+          </div>
+          <div class="form-section-title">Vigência</div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">{{ form.vigencia_inicio.label_tag }}{{ form.vigencia_inicio }}</div>
+            <div class="col-md-4">{{ form.vigencia_fim.label_tag }}{{ form.vigencia_fim }}</div>
+            <div class="col-md-4 d-flex align-items-end pb-1">
+              <div class="form-check">{{ form.ativa }}<label class="form-check-label">Ativa</label></div>
+            </div>
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'config_tecnica:lista_metas_reprodutivas' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success px-4">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Novo Ciclo{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'animais:lista_vacas' %}">Vacas</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'animais:detalhe_vaca' vaca.pk %}">{{ vaca.identificacao }}</a></li>
+  <li class="breadcrumb-item active">Novo ciclo</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 fw-bold">Novo ciclo reprodutivo — {{ vaca.identificacao }}</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="form-section-title">Cobertura / Gestação</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-3">{{ form.numero_lactacao.label_tag }}{{ form.numero_lactacao }}</div>
+            <div class="col-md-3">{{ form.data_cobertura.label_tag }}{{ form.data_cobertura }}</div>
+            <div class="col-md-6">{{ form.touro_semen.label_tag }}{{ form.touro_semen }}</div>
+            <div class="col-md-4">{{ form.data_previsao_parto.label_tag }}{{ form.data_previsao_parto }}</div>
+          </div>
+          <div class="form-section-title">Secagem</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">{{ form.data_secagem.label_tag }}{{ form.data_secagem }}</div>
+            <div class="col-md-8">{{ form.tratamento_secagem.label_tag }}{{ form.tratamento_secagem }}</div>
+          </div>
+          <div class="form-section-title">Pré-parto</div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">{{ form.data_entrada_pre_parto.label_tag }}{{ form.data_entrada_pre_parto }}</div>
+            <div class="col-md-4">{{ form.lote_pre_parto.label_tag }}{{ form.lote_pre_parto }}</div>
+            <div class="col-md-4">{{ form.ecc_entrada_pre_parto.label_tag }}{{ form.ecc_entrada_pre_parto }}</div>
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'animais:detalhe_vaca' vaca.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success">Salvar ciclo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

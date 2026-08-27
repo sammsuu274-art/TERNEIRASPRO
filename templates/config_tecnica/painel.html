@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Configuração Técnica{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block page_header %}
+<h4 class="fw-bold mb-4"><i class="bi bi-sliders text-success me-2"></i>Configuração Técnica</h4>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  <div class="col-md-6 col-lg-3">
+    <div class="card kpi-card h-100 p-3">
+      <div class="kpi-icon bg-primary bg-opacity-10 mb-2"><i class="bi bi-journal-check text-primary"></i></div>
+      <div class="kpi-value text-primary">{{ n_protocolos }}</div>
+      <div class="kpi-label">Protocolos vigentes</div>
+      <a href="{% url 'config_tecnica:lista_protocolos' %}" class="btn btn-sm btn-outline-primary mt-2">Gerenciar</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card kpi-card h-100 p-3">
+      <div class="kpi-icon bg-success bg-opacity-10 mb-2"><i class="bi bi-graph-up text-success"></i></div>
+      <div class="kpi-value text-success">{{ n_metas }}</div>
+      <div class="kpi-label">Metas de desenvolvimento</div>
+      <a href="{% url 'config_tecnica:lista_metas' %}" class="btn btn-sm btn-outline-success mt-2">Gerenciar</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card kpi-card h-100 p-3">
+      <div class="kpi-icon bg-warning bg-opacity-10 mb-2"><i class="bi bi-heart text-warning"></i></div>
+      <div class="kpi-value text-warning">{{ n_metas_rep }}</div>
+      <div class="kpi-label">Metas reprodutivas</div>
+      <a href="{% url 'config_tecnica:lista_metas_reprodutivas' %}" class="btn btn-sm btn-outline-warning mt-2">Gerenciar</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card kpi-card h-100 p-3">
+      <div class="kpi-icon bg-info bg-opacity-10 mb-2"><i class="bi bi-book text-info"></i></div>
+      <div class="kpi-value text-info">{{ n_referenciais }}</div>
+      <div class="kpi-label">Referenciais técnicos</div>
+      <a href="{% url 'config_tecnica:lista_referenciais' %}" class="btn btn-sm btn-outline-info mt-2">Ver</a>
+    </div>
+  </div>
+  <div class="col-md-6 col-lg-3">
+    <div class="card kpi-card h-100 p-3 {% if not n_criterios %}border border-warning{% endif %}">
+      <div class="kpi-icon bg-danger bg-opacity-10 mb-2"><i class="bi bi-check2-square text-danger"></i></div>
+      <div class="kpi-value text-danger">{{ n_criterios }}</div>
+      <div class="kpi-label">Critérios de conformidade</div>
+      {% if not n_criterios %}
+      <div class="text-warning small mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Nenhum configurado</div>
+      {% endif %}
+      <a href="{% url 'config_tecnica:lista_criterios' %}" class="btn btn-sm btn-outline-danger mt-2">Gerenciar</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

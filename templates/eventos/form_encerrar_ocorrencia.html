@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Encerrar Ocorrência{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 fw-bold">Encerrar ocorrência</h5>
+        <small class="text-muted">{{ ocorrencia.get_tipo_display }} — {{ ocorrencia.animal.identificacao }} — iniciada em {{ ocorrencia.data_inicio|date:"d/m/Y" }}</small>
+      </div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">{{ form.data_fim.label_tag }}{{ form.data_fim }}</div>
+            <div class="col-md-6">{{ form.resultado.label_tag }}{{ form.resultado }}</div>
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'animais:detalhe_terneira' ocorrencia.animal.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success px-4">Encerrar ocorrência</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

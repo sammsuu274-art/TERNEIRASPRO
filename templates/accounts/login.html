@@ -1,0 +1,648 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - TerneirasPro</title>
+    
+    <!-- Google Fonts - Inter para modernidade -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        /* ============================================
+           RESET E BASE
+           ============================================ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ============================================
+           CONTAINER PRINCIPAL
+           Fundo neutro escuro — complementa a arte sem
+           criar o efeito de "foto flutuando em preto"
+           ============================================ */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100vw;
+            height: 100vh;
+            background: #0d1f17;
+            position: relative;
+        }
+
+        /* ============================================
+           .login-right — CONTAINER DA IMAGEM
+           
+           Dimensionamento baseado na proporção real
+           da Background.png: 1448 × 1086 px.
+           
+           aspect-ratio garante que o container sempre
+           respeita 1448:1086, independente da resolução.
+           max-height: 94vh impede que exceda a viewport.
+           width: auto deixa a largura seguir a altura.
+           
+           Resultado: o container tem EXATAMENTE o mesmo
+           tamanho da imagem renderizada. Qualquer
+           percentual aplicado a elementos filhos
+           (como .login-left) passa a ser percentual
+           da imagem real — não de um container maior.
+           ============================================ */
+        .login-right {
+            position: relative;
+            aspect-ratio: 1448 / 1086;
+            max-height: 94vh;
+            max-width: 100%;
+            width: auto;
+            height: auto;
+            flex-shrink: 0;
+        }
+
+        /* Imagem preenche o container sem distorção.
+           contain é seguro aqui porque o container já
+           tem a proporção exata da imagem. */
+        .login-right-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            border-radius: 14px;
+        }
+
+        /* ============================================
+           .login-left — ZONA DE SEGURANÇA DO CARD
+           
+           A área verde da Background.png termina em
+           x = 675px de 1448px = 46.6% da largura.
+           Margem de segurança interna: 16px em cada lado.
+           
+           left: 16px  → respiro da borda esquerda da foto
+           right: auto → não empurra para a direita
+           max-width: 44% → limite absoluto antes da foto
+                            (46.6% - 2.6% de margem = 44%)
+           
+           top/bottom: 3% → margem de segurança vertical
+           proporcional, não fixa em px, para escalar
+           junto com a imagem em diferentes resoluções.
+           ============================================ */
+        .login-left {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 46.6%;      /* representa a área verde da imagem (675px / 1448px) */
+            height: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            box-sizing: border-box;
+            padding: 16px;
+
+            z-index: 10;
+        }
+
+        /* ============================================
+           CARD DE LOGIN
+           
+           Largura: clamp(280px, 38%, 360px)
+           - 38% do .login-right = 38% da imagem renderizada
+           - Em 1366×768: imagem ≈ 920px → card ≈ 350px
+           - Em 1920×1080: imagem ≈ 1296px → card limitado a 360px
+           - min 280px para não sumir em telas muito pequenas
+           
+           A borda direita do card em 1366×768:
+           16px (left) + 350px (card) = 366px
+           Área verde termina em: 920 × 0.466 = 429px
+           Margem livre: 429 - 366 = 63px — seguro.
+           ============================================ */
+        .login-card {
+            width: min(320px, 100%);
+            box-sizing: border-box;
+            padding: 32px 28px 28px 28px;
+            background: white;
+            border-radius: 24px;
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.06),
+                0 16px 40px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        /* ============================================
+           BRANDING — sem hacks de margem negativa
+           
+           .brand-section usa flex column com gap
+           para controlar o espaço entre logo e subtítulo
+           estruturalmente.
+           ============================================ */
+        .brand-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;              /* logo → subtítulo: sem gap adicional */
+            margin-bottom: 16px; /* subtítulo → formulário: espaço moderado */
+        }
+
+        .login-card .brand-logo {
+            width: auto;
+            max-width: 200px;
+            height: auto;
+        }
+
+        .login-card .brand-logo img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .brand-subtitle {
+            font-size: 0.775rem;
+            color: #64748b;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+
+        /* ============================================
+           FORMULÁRIO
+           ============================================ */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            height: 44px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #0f172a;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            outline: none;
+            background: #ffffff;
+            font-family: inherit;
+        }
+
+        .form-control:hover {
+            border-color: #cbd5e1;
+        }
+
+        .form-control:focus {
+            border-color: #16a34a;
+            box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1rem;
+            pointer-events: none;
+        }
+
+        .form-control:focus + .input-icon {
+            color: #16a34a;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 4px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s ease;
+        }
+
+        .password-toggle:hover {
+            color: #16a34a;
+        }
+
+        /* ============================================
+           OPÇÕES — só o checkbox, linha própria
+           ============================================ */
+        .form-options {
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+            margin-bottom: 14px;
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .form-check-input {
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0;
+            appearance: none;
+            background: white;
+            position: relative;
+            flex-shrink: 0;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+
+        .form-check-input:checked {
+            background-color: #16a34a;
+            border-color: #16a34a;
+        }
+
+        .form-check-input:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .form-check-label {
+            color: #475569;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Link de recuperação — abaixo do botão, hierarquia secundária */
+        .forgot-wrapper {
+            display: flex;
+            justify-content: center;
+            margin-top: 12px;
+        }
+
+        .forgot-password {
+            color: #16a34a;
+            text-decoration: none;
+            font-size: 0.775rem;
+            font-weight: 500;
+            transition: color 0.2s ease;
+        }
+
+        .forgot-password:hover {
+            color: #15803d;
+            text-decoration: underline;
+        }
+
+        /* ============================================
+           BOTÃO — limpo, sem excesso de efeitos
+           ============================================ */
+        .btn-login {
+            width: 100%;
+            height: 44px;
+            background: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.15s ease;
+            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-login:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login i {
+            font-size: 1rem;
+        }
+
+        /* ============================================
+           ALERTAS
+           ============================================ */
+        .alert {
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: none;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            color: #dc2626;
+            border-left: 3px solid #dc2626;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            color: #16a34a;
+            border-left: 3px solid #16a34a;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            color: #2563eb;
+            border-left: 3px solid #2563eb;
+        }
+
+        /* ============================================
+           ANIMAÇÃO DE ENTRADA
+           ============================================ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .login-card {
+            animation: fadeInUp 0.5s ease-out;
+        }
+
+        /* ============================================
+           RESPONSIVIDADE
+
+           768px: oculta a imagem, exibe card sobre
+           fundo verde escuro — identidade preservada.
+           ============================================ */
+        @media (max-width: 768px) {
+            html, body {
+                overflow: auto;
+            }
+
+            .login-container {
+                background: #0a2d1f;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                height: auto;
+                padding: 40px 20px;
+            }
+
+            .login-right {
+                aspect-ratio: unset;
+                max-height: none;
+                width: 100%;
+                height: auto;
+            }
+
+            .login-right-image {
+                display: none;
+            }
+
+            .login-left {
+                position: relative;
+                left: auto;
+                top: auto;
+                bottom: auto;
+                max-width: 100%;
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .login-card {
+                width: 100%;
+                max-width: 400px;
+                padding: 36px 28px 40px 28px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 24px 16px;
+            }
+
+            .login-card {
+                padding: 28px 22px 32px 22px;
+                border-radius: 18px;
+            }
+
+            .login-card .brand-logo {
+                max-width: 180px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- foto + card sobrepostos -->
+        <div class="login-right">
+            <img src="{% static 'img/Background.png' %}" alt="TerneirasPro - Gestão de Cria e Recria" class="login-right-image">
+
+            <!-- CARD aninhado dentro da foto -->
+            <div class="login-left">
+                <div class="login-card">
+                    <!-- Logo e branding -->
+                    <div class="brand-section">
+                        <div class="brand-logo">
+                            <img src="{% static 'img/logo-terneiraspro.png' %}" alt="TerneirasPro">
+                        </div>
+                        <p class="brand-subtitle">Gestão de Cria e Recria</p>
+                    </div>
+
+                    <!-- Mensagens de sistema -->
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Formulário de login -->
+                    <form method="post" action="{% url 'accounts:login' %}" id="loginForm">
+                        {% csrf_token %}
+                        
+                        <!-- Campo de usuário -->
+                        <div class="form-group">
+                            <label for="username" class="form-label">Usuário</label>
+                            <div class="input-wrapper">
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="username" 
+                                    name="username" 
+                                    placeholder="Digite seu usuário"
+                                    required
+                                    autocomplete="username"
+                                    autofocus
+                                >
+                                <i class="bi bi-person input-icon"></i>
+                            </div>
+                        </div>
+
+                        <!-- Campo de senha -->
+                        <div class="form-group">
+                            <label for="password" class="form-label">Senha</label>
+                            <div class="input-wrapper">
+                                <input 
+                                    type="password" 
+                                    class="form-control" 
+                                    id="password" 
+                                    name="password" 
+                                    placeholder="Digite sua senha"
+                                    required
+                                    autocomplete="current-password"
+                                >
+                                <i class="bi bi-lock input-icon"></i>
+                                <button 
+                                    type="button" 
+                                    class="password-toggle" 
+                                    id="togglePassword"
+                                    aria-label="Mostrar senha"
+                                >
+                                    <i class="bi bi-eye" id="toggleIcon"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Opções: apenas Lembrar-me -->
+                        <div class="form-options">
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="checkbox" 
+                                    id="remember_me" 
+                                    name="remember_me"
+                                >
+                                <label class="form-check-label" for="remember_me">
+                                    Lembrar meu acesso
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Botão de login -->
+                        <button type="submit" class="btn-login">
+                            <i class="bi bi-box-arrow-in-right"></i>
+                            Entrar
+                        </button>
+
+                        <!-- Recuperação de senha — abaixo do botão, hierarquia secundária -->
+                        <div class="forgot-wrapper">
+                            <a href="#" class="forgot-password">Esqueceu sua senha?</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer com logo Piracanjuba -->
+    <footer style="position: fixed; bottom: 20px; left: 20px; z-index: 100;">
+        <img src="{% static 'img/LogoPIRA.png' %}" alt="Piracanjuba Procampo" style="height: 70px; width: auto;">
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Toggle de visualização de senha
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordField = document.getElementById('password');
+        const toggleIcon = document.getElementById('toggleIcon');
+
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                
+                // Alterna o ícone
+                if (type === 'text') {
+                    toggleIcon.classList.remove('bi-eye');
+                    toggleIcon.classList.add('bi-eye-slash');
+                } else {
+                    toggleIcon.classList.remove('bi-eye-slash');
+                    toggleIcon.classList.add('bi-eye');
+                }
+            });
+        }
+
+        // Validação básica do formulário
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
+
+                if (!username || !password) {
+                    e.preventDefault();
+                    alert('Por favor, preencha todos os campos.');
+                }
+            });
+        }
+
+        // Previne zoom no iOS ao focar em inputs
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            document.querySelectorAll('input, select, textarea').forEach(function(element) {
+                element.addEventListener('focus', function() {
+                    this.style.fontSize = '16px';
+                });
+            });
+        }
+    </script>
+</body>
+</html>

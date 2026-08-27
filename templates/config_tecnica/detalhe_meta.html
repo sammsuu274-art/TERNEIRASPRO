@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}{{ meta.nome }}{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'config_tecnica:lista_metas' %}">Metas</a></li>
+  <li class="breadcrumb-item active">{{ meta.nome }}</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-12 col-lg-5">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h6 class="mb-0 fw-bold">Adicionar ponto à curva</h6></div>
+      <div class="card-body">
+        <form method="post">{% csrf_token %}
+          <div class="row g-2">
+            <div class="col-md-6">{{ form_ponto.tipo.label_tag }}{{ form_ponto.tipo }}</div>
+            <div class="col-md-6">{{ form_ponto.idade_dias.label_tag }}{{ form_ponto.idade_dias }}</div>
+            <div class="col-md-4">{{ form_ponto.valor_minimo.label_tag }}{{ form_ponto.valor_minimo }}</div>
+            <div class="col-md-4">{{ form_ponto.valor_ideal.label_tag }}{{ form_ponto.valor_ideal }}</div>
+            <div class="col-md-4">{{ form_ponto.valor_maximo.label_tag }}{{ form_ponto.valor_maximo }}</div>
+            <div class="col-12">{{ form_ponto.observacoes.label_tag }}{{ form_ponto.observacoes }}</div>
+          </div>
+          <button type="submit" class="btn btn-success btn-sm mt-2 w-100">Adicionar ponto</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white">
+        <h6 class="mb-0 fw-bold">{{ meta.nome }} — {{ meta.get_raca_display }}</h6>
+        {% if meta.fonte %}<small class="text-muted">{{ meta.fonte }}</small>{% endif %}
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Tipo</th><th>Idade (dias)</th><th>Mínimo</th><th>Ideal</th><th>Máximo</th></tr>
+            </thead>
+            <tbody>
+              {% for p in pontos %}
+              <tr>
+                <td><span class="badge bg-secondary">{{ p.get_tipo_display }}</span></td>
+                <td>{{ p.idade_dias }}d</td>
+                <td class="text-muted">{{ p.valor_minimo }}</td>
+                <td><strong>{{ p.valor_ideal }}</strong></td>
+                <td class="text-muted">{{ p.valor_maximo|default:"—" }}</td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="5" class="text-muted text-center py-3">Nenhum ponto cadastrado.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

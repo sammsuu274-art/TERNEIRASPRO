@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Colostragem{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 fw-bold">Colostragem — {{ terneira.identificacao }}</h5>
+      </div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">{{ form.data_hora.label_tag }}{{ form.data_hora }}</div>
+            <div class="col-md-6">{{ form.volume_ml.label_tag }}{{ form.volume_ml }}<small class="text-muted">Meta: ~{{ meta_volume|default:"—" }}ml (10% do peso)</small></div>
+            <div class="col-md-6">{{ form.origem.label_tag }}{{ form.origem }}</div>
+            <div class="col-md-6">{{ form.banco_colostro.label_tag }}{{ form.banco_colostro }}</div>
+            <div class="col-md-6">{{ form.metodo.label_tag }}{{ form.metodo }}</div>
+            <div class="col-md-3">{{ form.brix.label_tag }}{{ form.brix }}</div>
+            <div class="col-md-3">{{ form.temperatura_c.label_tag }}{{ form.temperatura_c }}</div>
+            <div class="col-md-6">
+              <label class="form-label d-flex align-items-center gap-2">
+                {{ form.ingestao_confirmada }}Ingestão confirmada
+              </label>
+            </div>
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'animais:detalhe_terneira' terneira.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success">Registrar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if colostragens %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h6 class="mb-0">Fornecimentos registrados</h6></div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th>#</th><th>Data/Hora</th><th>Volume</th><th>Tempo após nasc.</th><th>Brix</th></tr></thead>
+          <tbody>
+            {% for c in colostragens %}
+            <tr>
+              <td>{{ forloop.counter }}º</td>
+              <td class="small">{{ c.data_hora|date:"d/m H:i" }}</td>
+              <td><strong>{{ c.volume_ml }}ml</strong></td>
+              <td class="small {% if c.tempo_apos_nascimento_horas <= 2 %}text-success{% elif c.tempo_apos_nascimento_horas <= 6 %}text-warning{% else %}text-danger{% endif %}">
+                {% if c.tempo_apos_nascimento_horas is not None %}{{ c.tempo_apos_nascimento_horas }}h{% else %}—{% endif %}
+              </td>
+              <td class="small text-muted">{% if c.brix %}{{ c.brix }}%{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

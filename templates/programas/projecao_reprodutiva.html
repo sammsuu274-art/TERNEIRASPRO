@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Projeção Reprodutiva{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="fw-bold mb-0">Projeção reprodutiva — {{ terneira.identificacao }}</h4>
+      <a href="{% url 'animais:detalhe_terneira' terneira.pk %}" class="btn btn-outline-secondary btn-sm">← Voltar</a>
+    </div>
+
+    {% if erro %}
+    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>{{ erro }}</div>
+    {% elif projecao %}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold">Resultado da projeção</h6>
+        <span class="badge badge-{{ projecao.status_trajetoria }} px-3 py-2">{{ projecao.get_status_trajetoria_display }}</span>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-6 col-md-3 text-center">
+            <div class="text-muted small">Peso atual</div>
+            <div class="fw-bold fs-4">{{ projecao.peso_atual_kg }} kg</div>
+          </div>
+          <div class="col-6 col-md-3 text-center">
+            <div class="text-muted small">Peso alvo</div>
+            <div class="fw-bold fs-4">{{ projecao.peso_alvo_kg }} kg</div>
+          </div>
+          <div class="col-6 col-md-3 text-center">
+            <div class="text-muted small">GMD projetado</div>
+            <div class="fw-bold fs-4">{{ projecao.gmd_projetado }} kg/d</div>
+          </div>
+          <div class="col-6 col-md-3 text-center">
+            <div class="text-muted small">Idade estimada</div>
+            <div class="fw-bold fs-4">{{ projecao.idade_estimada_meses|default:"—" }} m</div>
+          </div>
+        </div>
+        {% if projecao.data_estimada %}
+        <div class="alert alert-info mt-3 mb-0 small">
+          <i class="bi bi-calendar-check me-2"></i>
+          Data estimada para atingir o peso alvo: <strong>{{ projecao.data_estimada|date:"d/m/Y" }}</strong>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h6 class="fw-semibold mb-2">Fundamentação</h6>
+        {% if projecao.observacoes %}
+        {% for linha in projecao.observacoes.splitlines %}
+        {% if linha %}<p class="small text-muted mb-1">• {{ linha }}</p>{% endif %}
+        {% endfor %}
+        {% endif %}
+        <div class="alert alert-secondary small mt-3 mb-0">
+          <i class="bi bi-info-circle me-2"></i>
+          Esta é uma <strong>projeção</strong> baseada no GMD atual. Será atualizada a cada nova pesagem. Não substitui a avaliação do responsável técnico.
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if meta_rep %}
+    <div class="card border-0 shadow-sm mt-3">
+      <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Meta reprodutiva utilizada</h6></div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><td class="text-muted">Nome</td><td>{{ meta_rep.nome }}</td></tr>
+          <tr><td class="text-muted">Raça</td><td>{{ meta_rep.get_raca_display }}</td></tr>
+          <tr><td class="text-muted">Peso adulto médio</td><td>{{ meta_rep.peso_adulto_medio_kg|default:"—" }} kg</td></tr>
+          <tr><td class="text-muted">Percentual utilizado</td><td>{{ meta_rep.percentual_peso_adulto }}%</td></tr>
+          <tr><td class="text-muted">Peso alvo calculado</td><td>{{ meta_rep.peso_alvo_calculado|default:meta_rep.peso_minimo_kg|default:"—" }} kg</td></tr>
+          <tr><td class="text-muted">Idade alvo</td><td>{{ meta_rep.idade_alvo_meses }} meses</td></tr>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

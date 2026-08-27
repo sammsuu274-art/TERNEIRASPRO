@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Registrar Parto{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'animais:lista_vacas' %}">Vacas</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'animais:detalhe_vaca' ciclo.vaca.pk %}">{{ ciclo.vaca.identificacao }}</a></li>
+  <li class="breadcrumb-item active">Registrar parto</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 fw-bold">Registrar parto — {{ ciclo.vaca.identificacao }}</h5>
+        <small class="text-muted">Lactação {{ ciclo.numero_lactacao|default:"?" }} · Prev. {{ ciclo.data_previsao_parto|date:"d/m/Y"|default:"—" }}</small>
+      </div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+
+          <div class="form-section-title">Dados do parto</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">{{ form.data_parto.label_tag }}{{ form.data_parto }}</div>
+            <div class="col-md-4">{{ form.hora_parto.label_tag }}{{ form.hora_parto }}</div>
+            <div class="col-md-4">{{ form.facilidade.label_tag }}{{ form.facilidade }}</div>
+            <div class="col-md-4">{{ form.vitalidade.label_tag }}{{ form.vitalidade }}</div>
+            <div class="col-md-4">
+              <label class="form-label d-flex align-items-center gap-2">
+                {{ form.assistencia }}Assistência necessária
+              </label>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label d-flex align-items-center gap-2">
+                {{ form.gemelar }}Parto gemelar
+              </label>
+            </div>
+          </div>
+
+          <div class="form-section-title">Animal nascido</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold">Identificação *</label>
+              <input type="text" name="identificacao" class="form-control" required placeholder="Brinco ou chip">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Sexo *</label>
+              <select name="sexo" class="form-select">
+                <option value="F">Fêmea</option>
+                <option value="M">Macho</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Raça</label>
+              <select name="raca" class="form-select">
+                <option value="{{ ciclo.vaca.raca }}" selected>{{ ciclo.vaca.get_raca_display }} (mesma da mãe)</option>
+                <option value="mestaca">Mestiça</option>
+                <option value="holandes">Holandês</option>
+                <option value="jersey">Jersey</option>
+                <option value="girolando">Girolando</option>
+                <option value="outra">Outra</option>
+              </select>
+            </div>
+            <div class="col-md-4">{{ form.peso_nascimento.label_tag }}{{ form.peso_nascimento }}</div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-12">{{ form.lesoes_anormalidades.label_tag }}{{ form.lesoes_anormalidades }}</div>
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+          </div>
+
+          <div class="alert alert-info small">
+            <i class="bi bi-info-circle me-2"></i>
+            Ao salvar, o animal nascido será criado automaticamente e um programa de acompanhamento será iniciado para fêmeas.
+          </div>
+
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'animais:detalhe_vaca' ciclo.vaca.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-lg me-1"></i>Registrar parto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

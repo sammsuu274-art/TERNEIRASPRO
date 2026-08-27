@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Metas de Desenvolvimento{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0">Metas de Desenvolvimento</h4>
+  <a href="{% url 'config_tecnica:nova_meta' %}" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i>Nova meta</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  {% for meta in metas %}
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div>
+          <h6 class="mb-0 fw-bold">{{ meta.nome }}</h6>
+          <span class="badge bg-success bg-opacity-10 text-success small">{{ meta.get_raca_display }}</span>
+          {% if meta.fonte %}<small class="text-muted ms-2">{{ meta.fonte }}</small>{% endif %}
+        </div>
+        <a href="{% url 'config_tecnica:detalhe_meta' meta.pk %}" class="btn btn-sm btn-outline-success">Ver pontos</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm mb-0">
+            <thead class="table-light">
+              <tr><th>Idade (dias)</th><th>Peso mín. (kg)</th><th>Peso ideal (kg)</th></tr>
+            </thead>
+            <tbody>
+              {% for p in meta.pontos.all|dictsort:"idade_dias" %}
+              {% if p.tipo == 'peso' %}
+              <tr>
+                <td>{{ p.idade_dias }}d</td>
+                <td class="text-muted">{{ p.valor_minimo }}</td>
+                <td><strong>{{ p.valor_ideal }}</strong></td>
+              </tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center py-5 text-muted">
+    <i class="bi bi-graph-up fs-1 d-block opacity-25 mb-2"></i>
+    Nenhuma meta cadastrada. <a href="{% url 'config_tecnica:nova_meta' %}">Criar agora</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

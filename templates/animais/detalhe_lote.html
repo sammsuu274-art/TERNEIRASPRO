@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}{{ lote.nome }}{% endblock %}
+{% block nav_lotes %}active{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'animais:lista_lotes' %}">Lotes</a></li>
+  <li class="breadcrumb-item active">{{ lote.nome }}</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="fw-bold mb-0">{{ lote.nome }}</h4>
+    <span class="badge bg-success bg-opacity-10 text-success">{{ lote.get_tipo_display }}</span>
+  </div>
+</div>
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Animais no lote ({{ animais.count }})</h6></div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Identificação</th><th>Raça</th><th>Nascimento</th><th>Situação</th></tr>
+        </thead>
+        <tbody>
+          {% for a in animais %}
+          <tr>
+            <td><a href="{% if a.sexo == 'F' %}{% url 'animais:detalhe_terneira' a.pk %}{% else %}#{% endif %}" class="fw-semibold text-decoration-none">{{ a.identificacao }}</a></td>
+            <td class="small">{{ a.get_raca_display }}</td>
+            <td class="small text-muted">{{ a.data_nascimento|date:"d/m/Y"|default:"—" }}</td>
+            <td><span class="badge bg-success">{{ a.get_situacao_display }}</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" class="text-muted text-center py-4">Nenhum animal neste lote.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

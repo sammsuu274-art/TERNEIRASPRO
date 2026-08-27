@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Programas de Acompanhamento{% endblock %}
+{% block nav_programas %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-clipboard2-pulse text-success me-2"></i>Acompanhamento</h4>
+  <div class="btn-group btn-group-sm">
+    <a href="?status=em_andamento" class="btn {% if status == 'em_andamento' %}btn-success{% else %}btn-outline-secondary{% endif %}">Em andamento</a>
+    <a href="?status=encerrado" class="btn {% if status == 'encerrado' %}btn-success{% else %}btn-outline-secondary{% endif %}">Encerrados</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Terneira</th>
+            <th class="d-none d-md-table-cell">Raça</th>
+            <th class="d-none d-md-table-cell">Início</th>
+            <th>Idade</th>
+            <th>Progresso</th>
+            <th>Último peso</th>
+            <th>Checkpoint</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in dados %}
+          {% with p=item.programa t=item.programa.terneira %}
+          <tr>
+            <td>
+              <a href="{% url 'animais:detalhe_terneira' t.pk %}" class="fw-semibold text-decoration-none text-dark">{{ t.identificacao }}</a>
+              {% if t.nome %}<div class="text-muted small">{{ t.nome }}</div>{% endif %}
+            </td>
+            <td class="d-none d-md-table-cell"><span class="badge bg-success bg-opacity-10 text-success small">{{ t.get_raca_display }}</span></td>
+            <td class="d-none d-md-table-cell text-muted small">{{ p.data_inicio|date:"d/m/Y" }}</td>
+            <td class="small">{% if t.idade_dias %}<strong>{{ t.idade_dias }}</strong>d{% else %}—{% endif %}</td>
+            <td style="min-width:100px;">
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress flex-grow-1" style="height:6px;">
+                  <div class="progress-bar bg-success" style="width:{{ p.percentual_concluido }}%"></div>
+                </div>
+                <small class="text-muted">{{ p.percentual_concluido }}%</small>
+              </div>
+            </td>
+            <td class="small">
+              {% if item.ultima_pesagem %}
+              <strong>{{ item.ultima_pesagem.peso_kg }}kg</strong>
+              <div class="text-muted">{{ item.ultima_pesagem.data|date:"d/m" }}</div>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              {% if item.checkpoint %}
+              <span class="badge badge-{{ item.checkpoint.status_checkpoint }}">{{ item.checkpoint.get_status_checkpoint_display }}</span>
+              {% elif item.checkpoint_pendente %}
+              <span class="badge bg-warning text-dark"><i class="bi bi-alarm me-1"></i>Pendente</span>
+              {% else %}
+              <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'programas:detalhe_programa' p.pk %}" class="btn btn-outline-secondary" title="Ver programa"><i class="bi bi-eye"></i></a>
+                {% if item.checkpoint_pendente and not item.checkpoint %}
+                <a href="{% url 'programas:checkpoint' p.pk %}" class="btn btn-outline-warning" title="Fazer checkpoint"><i class="bi bi-clipboard-check"></i></a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endwith %}
+          {% empty %}
+          <tr><td colspan="8" class="text-center text-muted py-5">
+            <i class="bi bi-clipboard2 fs-1 d-block opacity-25 mb-2"></i>Nenhum programa encontrado.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Checkpoint 6 Meses{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'programas:lista_programas' %}">Programas</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'animais:detalhe_terneira' terneira.pk %}">{{ terneira.identificacao }}</a></li>
+  <li class="breadcrumb-item active">Checkpoint 6 meses</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <!-- Dados calculados automaticamente -->
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Dados calculados</h6></div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <tr><td class="text-muted">Idade</td><td><strong>{{ dados_calculados.idade_dias }}d</strong></td></tr>
+          <tr><td class="text-muted">Peso atual</td><td><strong>{{ dados_calculados.peso_kg|default:"—" }} kg</strong></td></tr>
+          <tr><td class="text-muted">Peso meta</td><td>{{ dados_calculados.peso_meta_kg|default:"—" }} kg</td></tr>
+          <tr><td class="text-muted">% da meta</td>
+            <td>
+              {% if dados_calculados.percentual_meta %}
+              <strong class="{% if dados_calculados.percentual_meta >= 100 %}text-success{% elif dados_calculados.percentual_meta >= 90 %}text-warning{% else %}text-danger{% endif %}">
+                {{ dados_calculados.percentual_meta }}%
+              </strong>
+              {% else %}—{% endif %}
+            </td>
+          </tr>
+          <tr><td class="text-muted">GMD total</td><td>{{ dados_calculados.gmd_total|default:"—" }} kg/d</td></tr>
+          <tr><td class="text-muted">GMD 30d</td><td>{{ dados_calculados.gmd_30_dias|default:"—" }} kg/d</td></tr>
+          <tr><td class="text-muted">Diarreia</td><td>{{ dados_calculados.diarreia_ocorrencias }}x</td></tr>
+          <tr><td class="text-muted">Pneumonia</td><td>{{ dados_calculados.pneumonia_ocorrencias }}x</td></tr>
+          <tr><td class="text-muted">Onfalite</td><td>{{ dados_calculados.onfalite_ocorrencias }}x</td></tr>
+          <tr><td class="text-muted">Tratamentos</td><td>{{ dados_calculados.total_tratamentos }}</td></tr>
+          <tr><td class="text-muted">Desaleitada</td><td>{% if dados_calculados.desaleitada %}✓{% else %}Não{% endif %}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Trajetória calculada</h6></div>
+      <div class="card-body">
+        <span class="badge badge-{{ trajetoria.status }} mb-2">
+          {% if trajetoria.status == 'favoravel' %}Favorável
+          {% elif trajetoria.status == 'atencao' %}Atenção
+          {% elif trajetoria.status == 'desfavoravel' %}Desfavorável
+          {% else %}Dados insuficientes{% endif %}
+        </span>
+        {% for motivo in trajetoria.motivos %}
+        <p class="small text-muted mb-1">• {{ motivo }}</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulário de avaliação -->
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Avaliação do técnico</h6></div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="form-section-title">Dados da avaliação</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">{{ form.data_avaliacao.label_tag }}{{ form.data_avaliacao }}</div>
+            <div class="col-md-4">{{ form.peso_kg.label_tag }}{{ form.peso_kg }}</div>
+            <div class="col-md-4">{{ form.ecc.label_tag }}{{ form.ecc }}</div>
+            <div class="col-md-4">{{ form.altura_cm.label_tag }}{{ form.altura_cm }}</div>
+            <div class="col-md-4">{{ form.perimetro_toracico_cm.label_tag }}{{ form.perimetro_toracico_cm }}</div>
+          </div>
+
+          <!-- Campos calculados (ocultos mas editáveis) -->
+          {{ form.idade_dias.as_hidden }}
+          {{ form.peso_meta_kg.as_hidden }}
+          {{ form.percentual_meta.as_hidden }}
+          {{ form.gmd_total.as_hidden }}
+          {{ form.gmd_30_dias.as_hidden }}
+          {{ form.diarreia_ocorrencias.as_hidden }}
+          {{ form.pneumonia_ocorrencias.as_hidden }}
+          {{ form.onfalite_ocorrencias.as_hidden }}
+          {{ form.total_tratamentos.as_hidden }}
+          {{ form.doenca_ativa.as_hidden }}
+          {{ form.desaleitada.as_hidden }}
+
+          <div class="form-section-title">Classificação</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">{{ form.status_checkpoint.label_tag }}{{ form.status_checkpoint }}</div>
+            <div class="col-md-4">{{ form.crescimento_estrutural.label_tag }}{{ form.crescimento_estrutural }}</div>
+            <div class="col-md-4">{{ form.consumo_concentrado_adequado.label_tag }}{{ form.consumo_concentrado_adequado }}</div>
+            <div class="col-md-6">{{ form.status_trajetoria.label_tag }}{{ form.status_trajetoria }}</div>
+          </div>
+          <div class="mb-3">{{ form.indicadores_trajetoria.label_tag }}{{ form.indicadores_trajetoria }}</div>
+
+          <div class="form-section-title">Observações técnicas</div>
+          <div class="row g-3 mb-4">
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+            <div class="col-12">{{ form.recomendacoes.label_tag }}{{ form.recomendacoes }}</div>
+          </div>
+
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'programas:lista_programas' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-lg me-1"></i>Salvar checkpoint</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

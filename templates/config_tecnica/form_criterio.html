@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'config_tecnica:painel' %}">Configuração</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'config_tecnica:lista_criterios' %}">Critérios</a></li>
+  <li class="breadcrumb-item active">{{ titulo }}</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7">
+
+    <div class="alert alert-info small mb-4">
+      <i class="bi bi-info-circle me-2"></i>
+      <strong>O que é um critério de conformidade?</strong>
+      É uma regra numérica que o sistema usa automaticamente para avaliar cada evento registrado.
+      Exemplo: "Colostragem em até 2 horas" — ao registrar uma colostragem, o sistema compara o tempo real com este limite e grava o resultado.
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h5 class="mb-0 fw-bold">{{ titulo }}</h5></div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+
+          <div class="form-section-title">Definição</div>
+          <div class="row g-3 mb-3">
+            <div class="col-12">
+              <label class="form-label">Tipo de critério *</label>
+              {{ form.codigo }}
+              {% if form.codigo.errors %}<div class="text-danger small">{{ form.codigo.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">Descrição personalizada <span class="text-muted">(opcional)</span></label>
+              {{ form.descricao_custom }}
+            </div>
+          </div>
+
+          <div class="form-section-title">Valor do limite</div>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label class="form-label">Valor limite *</label>
+              {{ form.valor_limite }}
+              {% if form.valor_limite.errors %}<div class="text-danger small">{{ form.valor_limite.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Unidade *</label>
+              {{ form.unidade }}
+              {% if form.unidade.errors %}<div class="text-danger small">{{ form.unidade.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+
+          <div class="form-section-title">Escopo e vigência</div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label">Aplicar à raça</label>
+              {{ form.escopo_raca }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Início da vigência *</label>
+              {{ form.vigencia_inicio }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Fim da vigência <span class="text-muted">(vazio = vigente)</span></label>
+              {{ form.vigencia_fim }}
+            </div>
+            <div class="col-md-8">
+              <label class="form-label">Referencial técnico base <span class="text-muted">(opcional)</span></label>
+              {{ form.referencial_base }}
+            </div>
+            <div class="col-md-4 d-flex align-items-end pb-1">
+              <div class="form-check">{{ form.ativo }}<label class="form-check-label">Ativo</label></div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'config_tecnica:lista_criterios' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success px-4">
+              <i class="bi bi-check-lg me-1"></i>Salvar critério
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

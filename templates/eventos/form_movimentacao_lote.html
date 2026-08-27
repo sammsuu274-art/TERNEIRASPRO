@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Movimentar Lote{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 fw-bold">Movimentar para Lote — {{ animal.identificacao }}</h5>
+        <small class="text-muted">
+          {% if animal.lote_atual %}
+            Lote atual: <strong>{{ animal.lote_atual.nome }}</strong> ({{ animal.lote_atual.get_tipo_display }})
+          {% else %}
+            Sem lote definido
+          {% endif %}
+        </small>
+      </div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              {{ form.data.label_tag }}
+              {{ form.data }}
+            </div>
+            <div class="col-md-8">
+              {{ form.lote.label_tag }}
+              {{ form.lote }}
+            </div>
+            <div class="col-12">
+              {{ form.motivo.label_tag }}
+              {{ form.motivo }}
+            </div>
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% if animal.sexo == 'F' and animal.categoria in 'terneira,novilha' %}{% url 'animais:detalhe_terneira' animal.pk %}{% else %}{% url 'animais:detalhe_vaca' animal.pk %}{% endif %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Mover Animal</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if historico %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white">
+        <h6 class="mb-0">Histórico de movimentações</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Data</th>
+              <th>Lote destino</th>
+              <th>Tipo</th>
+              <th>Motivo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for mov in historico %}
+            <tr>
+              <td class="small">{{ mov.data|date:"d/m/Y" }}</td>
+              <td><strong>{{ mov.lote.nome }}</strong></td>
+              <td class="small text-muted">{{ mov.lote.get_tipo_display }}</td>
+              <td class="small">{{ mov.motivo|truncatechars:50|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

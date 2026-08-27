@@ -1,0 +1,822 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h4 class="fw-bold mb-0">Dashboard</h4>
+    <p class="text-muted small mb-0">{{ propriedade_ativa.nome }} — últimos {{ periodo }} dias</p>
+  </div>
+  <div class="d-flex gap-1">
+    <a href="?periodo=30"  class="btn btn-sm {% if periodo == 30  %}btn-success{% else %}btn-outline-secondary{% endif %}">30d</a>
+    <a href="?periodo=90"  class="btn btn-sm {% if periodo == 90  %}btn-success{% else %}btn-outline-secondary{% endif %}">90d</a>
+    <a href="?periodo=180" class="btn btn-sm {% if periodo == 180 %}btn-success{% else %}btn-outline-secondary{% endif %}">180d</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{# ══════════════════════════════════════════════════════════════════════════ #}
+{# ZONA 1 — ALERTAS                                                          #}
+{# ══════════════════════════════════════════════════════════════════════════ #}
+
+{% if alertas_criticos %}
+<div class="mb-3">
+  <div class="d-flex align-items-center gap-2 mb-2">
+    <span class="badge bg-danger px-3 py-2"><i class="bi bi-exclamation-octagon me-1"></i>Atenção imediata</span>
+    <span class="text-muted small">{{ alertas_criticos|length }} alerta(s) crítico(s)</span>
+  </div>
+  <div class="row g-2">
+    {% for alerta in alertas_criticos %}
+    <div class="col-12 col-md-6 col-xl-4">
+      <a href="{{ alerta.url }}" class="text-decoration-none">
+        <div class="card border-danger border-start border-4 shadow-sm py-2 px-3 d-flex flex-row align-items-center gap-3">
+          <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center" style="width:40px;height:40px;flex-shrink:0;">
+            <i class="bi {{ alerta.icone }} text-danger fs-5"></i>
+          </div>
+          <div class="overflow-hidden">
+            <div class="fw-semibold small text-danger text-truncate">{{ alerta.titulo }}</div>
+            <div class="text-muted small text-truncate">{{ alerta.detalhe }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if alertas_operacionais %}
+<div class="mb-4">
+  <div class="d-flex align-items-center gap-2 mb-2">
+    <span class="badge bg-warning text-dark px-3 py-2"><i class="bi bi-exclamation-triangle me-1"></i>Requer atenção</span>
+    <span class="text-muted small">{{ alertas_operacionais|length }} alerta(s) operacional(is)</span>
+  </div>
+  <div class="row g-2">
+    {% for alerta in alertas_operacionais %}
+    <div class="col-12 col-md-6 col-xl-4">
+      <a href="{{ alerta.url }}" class="text-decoration-none">
+        <div class="card border-warning border-start border-4 shadow-sm py-2 px-3 d-flex flex-row align-items-center gap-3">
+          <div class="rounded-circle bg-warning bg-opacity-10 d-flex align-items-center justify-content-center" style="width:40px;height:40px;flex-shrink:0;">
+            <i class="bi {{ alerta.icone }} text-warning fs-5"></i>
+          </div>
+          <div class="overflow-hidden">
+            <div class="fw-semibold small text-warning-emphasis text-truncate">{{ alerta.titulo }}</div>
+            <div class="text-muted small text-truncate">{{ alerta.detalhe }}</div>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+{% if not alertas_criticos and not alertas_operacionais %}
+<div class="alert alert-success d-flex align-items-center gap-3 mb-4">
+  <i class="bi bi-check-circle-fill fs-4 text-success"></i>
+  <div><strong>Tudo em dia.</strong> Nenhum alerta ativo para hoje.</div>
+</div>
+{% endif %}
+
+{# ══════════════════════════════════════════════════════════════════════════ #}
+{# ZONA 2 — STATUS DO REBANHO                                                #}
+{# ══════════════════════════════════════════════════════════════════════════ #}
+
+<div class="row g-3 mb-4">
+
+  {# ── Desempenho ── #}
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small letter-spacing-1 mb-2">
+      <i class="bi bi-bar-chart me-1"></i>Desempenho
+    </h6>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Terneiras ativas</div>
+      <div class="kpi-value text-success">{{ n_terneiras_ativas }}</div>
+      <a href="{% url 'animais:lista_terneiras' %}" class="text-success small text-decoration-none">Ver todas →</a>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Novilhas em recria</div>
+      <div class="kpi-value text-primary">{{ n_novilhas_ativas }}</div>
+      <a href="{% url 'programas:lista_aptas_reproducao' %}" class="text-primary small text-decoration-none">Ver →</a>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Nascimentos</div>
+      <div class="kpi-value">{{ n_nascimentos }}</div>
+      <div class="text-muted small">{{ n_femeas }}F / {{ n_machos }}M</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">GMD médio aleit.</div>
+      {% if gmd_medio %}
+      <div class="kpi-value {% if gmd_medio >= 0.7 %}text-success{% elif gmd_medio >= 0.6 %}text-warning{% else %}text-danger{% endif %}">
+        {{ gmd_medio }}
+      </div>
+      <div class="text-muted small">kg/dia ({{ gmd_n }} animais)</div>
+      {% else %}
+      <div class="kpi-value text-muted">—</div>
+      <div class="text-muted small">Sem dados</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Mortalidade</div>
+      {% if mortalidade.percentual is not None %}
+      <div class="kpi-value {% if mortalidade.percentual <= 2 %}text-success{% elif mortalidade.percentual <= 5 %}text-warning{% else %}text-danger{% endif %}">
+        {{ mortalidade.percentual }}%
+      </div>
+      {% if not mortalidade.confiavel %}
+      <div class="text-warning small"><i class="bi bi-exclamation-triangle me-1"></i>Poucos dados</div>
+      {% endif %}
+      {% else %}
+      <div class="kpi-value text-muted">—</div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+{# ── Conformidade ── #}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-check2-square me-1"></i>Conformidade de protocolos
+    </h6>
+  </div>
+
+  {% with taxas=conf_colostro_tempo %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Colostro ≤ 2h</div>
+      {% include "partials/kpi_conformidade.html" with dados=taxas verde=90 amarelo=70 %}
+    </div>
+  </div>
+  {% endwith %}
+
+  {% with taxas=conf_colostro_volume %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Volume colostro</div>
+      {% include "partials/kpi_conformidade.html" with dados=taxas verde=85 amarelo=70 %}
+    </div>
+  </div>
+  {% endwith %}
+
+  {% with taxas=conf_umbigo %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Umbigo ≤ 1h</div>
+      {% include "partials/kpi_conformidade.html" with dados=taxas verde=90 amarelo=70 %}
+    </div>
+  </div>
+  {% endwith %}
+
+  {% with taxas=conf_dias_secos_min %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Dias secos ≥ mín.</div>
+      {% include "partials/kpi_conformidade.html" with dados=taxas verde=90 amarelo=70 %}
+    </div>
+  </div>
+  {% endwith %}
+
+  {% with taxas=conf_dias_pre_parto %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Pré-parto ≥ 21d</div>
+      {% include "partials/kpi_conformidade.html" with dados=taxas verde=90 amarelo=70 %}
+    </div>
+  </div>
+  {% endwith %}
+
+  {% with taxas=conf_peso_idade %}
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Peso na curva</div>
+      {% include "partials/kpi_conformidade.html" with dados=taxas verde=80 amarelo=60 %}
+    </div>
+  </div>
+  {% endwith %}
+
+</div>
+
+{# ── Sanitário + Reprodutivo ── #}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-heart-pulse me-1"></i>Sanitário
+    </h6>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Diarreia</div>
+      {% if inc_diarreia.percentual is not None %}
+      <div class="kpi-value {% if inc_diarreia.percentual <= 15 %}text-success{% elif inc_diarreia.percentual <= 25 %}text-warning{% else %}text-danger{% endif %}">
+        {{ inc_diarreia.percentual }}%
+      </div>
+      <div class="text-muted small">{{ n_diarreia }} casos</div>
+      {% else %}<div class="kpi-value text-muted">—</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Pneumonia</div>
+      {% if inc_pneumonia.percentual is not None %}
+      <div class="kpi-value {% if inc_pneumonia.percentual <= 10 %}text-success{% elif inc_pneumonia.percentual <= 20 %}text-warning{% else %}text-danger{% endif %}">
+        {{ inc_pneumonia.percentual }}%
+      </div>
+      <div class="text-muted small">{{ n_pneumonia }} casos</div>
+      {% else %}<div class="kpi-value text-muted">—</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Onfalite</div>
+      {% if inc_onfalite.percentual is not None %}
+      <div class="kpi-value {% if inc_onfalite.percentual <= 5 %}text-success{% elif inc_onfalite.percentual <= 10 %}text-warning{% else %}text-danger{% endif %}">
+        {{ inc_onfalite.percentual }}%
+      </div>
+      <div class="text-muted small">{{ n_onfalite }} casos</div>
+      {% else %}<div class="kpi-value text-muted">—</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="col-12 col-md-3 col-xl-4 d-none d-md-block"></div>
+
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2 mt-2">
+      <i class="bi bi-compass me-1"></i>Reprodutivo
+    </h6>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Novilhas</div>
+      <div class="kpi-value">{{ n_novilhas }}</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Traj. favorável</div>
+      <div class="kpi-value text-success">{{ traj_favoravel }}</div>
+      <a href="{% url 'programas:lista_aptas_reproducao' %}" class="text-success small text-decoration-none">Ver →</a>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Traj. atenção</div>
+      <div class="kpi-value {% if traj_atencao > 0 %}text-warning{% else %}text-muted{% endif %}">
+        {{ traj_atencao }}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Traj. desfavorável</div>
+      <div class="kpi-value {% if traj_desfavoravel > 0 %}text-danger{% else %}text-muted{% endif %}">
+        {{ traj_desfavoravel }}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <div class="card kpi-card p-3 h-100">
+      <div class="kpi-label">Checkpoints</div>
+      <div class="kpi-value text-info">{{ n_checkpoints }}</div>
+      <a href="{% url 'programas:lista_programas' %}" class="text-info small text-decoration-none">Ver →</a>
+    </div>
+  </div>
+
+</div>
+
+{# ══════════════════════════════════════════════════════════════════════════ #}
+{# ZONA 3 — TENDÊNCIA                                                        #}
+{# ══════════════════════════════════════════════════════════════════════════ #}
+
+<div class="row g-3">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-graph-up-arrow me-1"></i>Tendência — últimos 6 meses
+    </h6>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2">
+        <span class="fw-semibold small">Taxa de colostragem ≤ 2h (%)</span>
+      </div>
+      <div class="card-body p-3">
+        <div class="chart-container">
+          <canvas id="chartColostro"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2">
+        <span class="fw-semibold small">GMD médio no aleitamento (kg/dia)</span>
+      </div>
+      <div class="card-body p-3">
+        <div class="chart-container">
+          <canvas id="chartGmd"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2">
+        <span class="fw-semibold small">Incidência sanitária (%)</span>
+      </div>
+      <div class="card-body p-3">
+        <div class="chart-container">
+          <canvas id="chartSanitario"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2">
+        <span class="fw-semibold small">% terneiras dentro da curva de peso</span>
+      </div>
+      <div class="card-body p-3">
+        <div class="chart-container">
+          <canvas id="chartCurva"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Dados do Django em formato JSON válido
+var dadosTendencia = {
+  labels: {{ tendencia_labels_json|safe }},
+  colostro: {{ tendencia_colostro_json|safe }},
+  gmd: {{ tendencia_gmd_json|safe }},
+  diarreia: {{ tendencia_diarreia_json|safe }},
+  pneumonia: {{ tendencia_pneumonia_json|safe }},
+  curva: {{ tendencia_curva_peso_json|safe }}
+};
+
+// Metas para linhas de referência
+var metas = {
+  colostro_tempo: {{ meta_colostro_tempo_json|default:'90'|safe }},
+  gmd: {{ meta_gmd_json|default:'0.75'|safe }},
+  diarreia: {{ meta_diarreia_json|default:'15'|safe }}, 
+  pneumonia: {{ meta_pneumonia_json|default:'10'|safe }},
+  curva_peso: {{ meta_curva_peso_json|default:'80'|safe }}
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof Chart === 'undefined' || !dadosTendencia.labels || dadosTendencia.labels.length === 0) {
+    return;
+  }
+
+  // Registrar o plugin de data labels
+  Chart.register(ChartDataLabels);
+
+  // Configuração minimalista - design limpo e profissional
+  const CHART_DEFAULTS = {
+    responsive: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: 30,    // Aumentado para acomodar rótulos de valores
+        bottom: 25, // Espaço reduzido para legenda
+        left: 20,   // Espaço para rótulos do eixo Y
+        right: 8    // Espaço mínimo
+      }
+    },
+    plugins: { 
+      legend: { 
+        position: 'bottom',
+        align: 'center',
+        labels: { 
+          boxWidth: 8, 
+          font: { size: 9 },
+          padding: 6,
+          usePointStyle: true
+        } 
+      }
+    },
+    scales: {
+      y: { 
+        beginAtZero: true,
+        // MANTER RÓTULOS DO EIXO Y, SEM GRID
+        grid: { display: false }, // Sem linhas de grade
+        border: { display: false },
+        ticks: { 
+          display: true, // MOSTRAR valores do eixo Y
+          font: { size: 9 },
+          maxTicksLimit: 5,
+          padding: 8,
+          color: '#6c757d'
+        }
+      },
+      x: { 
+        type: 'category',
+        // MANTER RÓTULOS DAS DATAS VISÍVEIS
+        grid: { display: false }, // Sem linhas verticais
+        border: { display: false },
+        offset: true, // Margem nas extremidades
+        ticks: { 
+          display: true, // Garantir que rótulos das datas apareçam
+          font: { size: 8 },
+          maxRotation: 0,
+          padding: 8,
+          color: '#6c757d' // Cor cinza suave
+        }
+      }
+    },
+    elements: {
+      point: {
+        hoverRadius: 6,
+        radius: 3.5
+      }
+    },
+    interaction: {
+      intersect: false,
+      mode: 'index'
+    }
+  };
+
+  // T1 — Taxa de colostragem ≤ 2h (%) - COM RÓTULOS DE VALORES + LINHA DE META
+  new Chart(document.getElementById('chartColostro'), {
+    type: 'line',
+    data: {
+      labels: dadosTendencia.labels,
+      datasets: [
+        {
+          label: 'Colostro ≤ 2h',
+          data: dadosTendencia.colostro,
+          borderColor: '#198754',
+          backgroundColor: 'rgba(25,135,84,0.1)',
+          borderWidth: 2.5,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 3.5,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#198754',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          spanGaps: true,
+          order: 1
+        },
+        {
+          label: 'Meta (90%)',
+          data: Array(dadosTendencia.labels.length).fill(metas.colostro_tempo),
+          borderColor: '#dc3545',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 2
+        }
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        datalabels: {
+          display: function(context) {
+            // Só mostrar rótulos no dataset principal (não na linha de meta)
+            return context.datasetIndex === 0;
+          },
+          anchor: 'end',
+          align: 'top',
+          offset: 4,
+          font: {
+            size: 9,
+            weight: '600'
+          },
+          color: '#198754',
+          formatter: function(value) {
+            if (value === null || value === undefined) return '';
+            return value + '%';
+          }
+        }
+      },
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        y: { 
+          ...CHART_DEFAULTS.scales.y,
+          min: 0, 
+          max: 105, // Folga visual para pontos a 100%
+          ticks: {
+            ...CHART_DEFAULTS.scales.y.ticks,
+            callback: function(value) { 
+              if (value <= 100) return value + '%';
+              return ''; // Não mostra label acima de 100%
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // T2 — GMD médio no aleitamento (kg/dia) - COM RÓTULOS DE VALORES + LINHA DE META
+  new Chart(document.getElementById('chartGmd'), {
+    type: 'bar',
+    data: {
+      labels: dadosTendencia.labels,
+      datasets: [
+        {
+          label: 'GMD (kg/dia)',
+          data: dadosTendencia.gmd,
+          backgroundColor: 'rgba(13,110,253,0.8)',
+          borderColor: '#0d6efd',
+          borderWidth: 1,
+          borderRadius: 4,
+          borderSkipped: false,
+          categoryPercentage: 0.7,
+          barPercentage: 0.8,
+          order: 1
+        },
+        {
+          label: 'Meta (0.75 kg/dia)',
+          data: Array(dadosTendencia.labels.length).fill(metas.gmd),
+          type: 'line',
+          borderColor: '#dc3545',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 2
+        }
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        datalabels: {
+          display: function(context) {
+            // Só mostrar rótulos nas barras (não na linha de meta)
+            return context.datasetIndex === 0;
+          },
+          anchor: 'end',
+          align: 'top',
+          offset: 4,
+          font: {
+            size: 9,
+            weight: '600'
+          },
+          color: '#0d6efd',
+          formatter: function(value) {
+            if (value === null || value === undefined) return '';
+            return value.toFixed(2);
+          }
+        }
+      },
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        y: {
+          ...CHART_DEFAULTS.scales.y,
+          // Escala dinâmica com folga superior
+          suggestedMax: Math.max(...dadosTendencia.gmd.filter(v => v !== null).concat([metas.gmd])) * 1.15,
+          ticks: {
+            ...CHART_DEFAULTS.scales.y.ticks,
+            callback: function(value) { 
+              return value.toFixed(2); 
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // T3 — Incidência sanitária (%) - COM RÓTULOS DE VALORES + LINHAS DE META
+  new Chart(document.getElementById('chartSanitario'), {
+    type: 'line',
+    data: {
+      labels: dadosTendencia.labels,
+      datasets: [
+        {
+          label: 'Diarreia',
+          data: dadosTendencia.diarreia,
+          borderColor: '#dc3545',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 3.5,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#dc3545',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          spanGaps: true,
+          order: 1
+        },
+        {
+          label: 'Pneumonia',
+          data: dadosTendencia.pneumonia,
+          borderColor: '#fd7e14',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          tension: 0.4,
+          fill: false,
+          pointRadius: 3.5,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#fd7e14',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          spanGaps: true,
+          order: 1
+        },
+        {
+          label: 'Meta Diarreia (15%)',
+          data: Array(dadosTendencia.labels.length).fill(metas.diarreia),
+          borderColor: '#dc3545',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 2
+        },
+        {
+          label: 'Meta Pneumonia (10%)',
+          data: Array(dadosTendencia.labels.length).fill(metas.pneumonia),
+          borderColor: '#fd7e14',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [3, 3],
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 2
+        }
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        datalabels: {
+          display: function(context) {
+            // Só mostrar rótulos nos dados reais (índices 0 e 1)
+            return context.datasetIndex < 2;
+          },
+          anchor: 'end',
+          align: function(context) {
+            // Alternar posição para evitar sobreposição
+            return context.datasetIndex === 0 ? 'top' : 'bottom';
+          },
+          offset: 4,
+          font: {
+            size: 9,
+            weight: '600'
+          },
+          color: function(context) {
+            return context.dataset.borderColor;
+          },
+          formatter: function(value) {
+            if (value === null || value === undefined) return '';
+            return value + '%';
+          }
+        }
+      },
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        y: {
+          ...CHART_DEFAULTS.scales.y,
+          // Escala dinâmica considerando dados + metas
+          suggestedMax: Math.max(
+            ...dadosTendencia.diarreia.concat(dadosTendencia.pneumonia).filter(v => v !== null),
+            metas.diarreia,
+            metas.pneumonia
+          ) * 1.2,
+          ticks: {
+            ...CHART_DEFAULTS.scales.y.ticks,
+            callback: function(value) { 
+              return value + '%'; 
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // T4 — % terneiras dentro da curva de peso - COM RÓTULOS DE VALORES + LINHA DE META
+  new Chart(document.getElementById('chartCurva'), {
+    type: 'line',
+    data: {
+      labels: dadosTendencia.labels,
+      datasets: [
+        {
+          label: '% dentro da curva',
+          data: dadosTendencia.curva,
+          borderColor: '#0dcaf0',
+          backgroundColor: 'rgba(13,202,240,0.1)',
+          borderWidth: 2.5,
+          tension: 0.4,
+          fill: true,
+          pointRadius: 3.5,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#0dcaf0',
+          pointBorderColor: '#ffffff',
+          pointBorderWidth: 2,
+          spanGaps: true,
+          order: 1
+        },
+        {
+          label: 'Meta (80%)',
+          data: Array(dadosTendencia.labels.length).fill(metas.curva_peso),
+          borderColor: '#dc3545',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          pointHoverRadius: 0,
+          fill: false,
+          tension: 0,
+          order: 2
+        }
+      ]
+    },
+    options: {
+      ...CHART_DEFAULTS,
+      plugins: {
+        ...CHART_DEFAULTS.plugins,
+        datalabels: {
+          display: function(context) {
+            // Só mostrar rótulos no dataset principal (não na linha de meta)
+            return context.datasetIndex === 0;
+          },
+          anchor: 'end',
+          align: 'top',
+          offset: 4,
+          font: {
+            size: 9,
+            weight: '600'
+          },
+          color: '#0dcaf0',
+          formatter: function(value) {
+            if (value === null || value === undefined) return '';
+            return value + '%';
+          }
+        }
+      },
+      scales: {
+        ...CHART_DEFAULTS.scales,
+        y: { 
+          ...CHART_DEFAULTS.scales.y,
+          min: 0, 
+          max: 105, // Folga visual para pontos a 100%
+          ticks: {
+            ...CHART_DEFAULTS.scales.y.ticks,
+            callback: function(value) { 
+              if (value <= 100) return value + '%';
+              return ''; // Não mostra label acima de 100%
+            }
+          }
+        }
+      }
+    }
+  });
+
+  console.log('✅ Todos os gráficos criados com sucesso');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Sem propriedade{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-6 text-center">
+    <i class="bi bi-house-x fs-1 text-muted d-block mb-3"></i>
+    <h5 class="fw-bold">Nenhuma propriedade associada</h5>
+    <p class="text-muted">Seu usuário ainda não está vinculado a nenhuma propriedade. Solicite ao administrador do sistema.</p>
+    <a href="{% url 'accounts:logout' %}" class="btn btn-outline-secondary">Sair</a>
+  </div>
+</div>
+{% endblock %}

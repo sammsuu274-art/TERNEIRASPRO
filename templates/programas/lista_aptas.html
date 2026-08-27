@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Aptas à Reprodução{% endblock %}
+{% block nav_aptas %}active{% endblock %}
+
+{% block page_header %}
+<h4 class="fw-bold mb-4"><i class="bi bi-check2-circle text-success me-2"></i>Aptas à Reprodução</h4>
+{% endblock %}
+
+{% block content %}
+{% if aptas %}
+<h6 class="text-success fw-semibold mb-3"><i class="bi bi-check-circle me-2"></i>Trajetória favorável ({{ aptas|length }})</h6>
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Animal</th><th>Raça</th><th>Idade</th><th>Último peso</th><th>Peso alvo</th><th>Data estimada</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for item in aptas %}
+          <tr>
+            <td><a href="{% url 'animais:detalhe_terneira' item.animal.pk %}" class="fw-semibold text-decoration-none">{{ item.animal.identificacao }}</a></td>
+            <td class="small">{{ item.animal.get_raca_display }}</td>
+            <td class="small">{% if item.animal.idade_meses %}{{ item.animal.idade_meses }}m{% else %}—{% endif %}</td>
+            <td class="small">{% if item.ultima_pesagem %}{{ item.ultima_pesagem.peso_kg }} kg{% else %}—{% endif %}</td>
+            <td class="small">{% if item.projecao %}{{ item.projecao.peso_alvo_kg }} kg{% else %}—{% endif %}</td>
+            <td class="small">{% if item.projecao and item.projecao.data_estimada %}{{ item.projecao.data_estimada|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+            <td>
+              <a href="{% url 'programas:registrar_ia' item.animal.pk %}" class="btn btn-sm btn-success">Registrar IA</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if atencao %}
+<h6 class="text-warning fw-semibold mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Em acompanhamento / atenção ({{ atencao|length }})</h6>
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Animal</th><th>Raça</th><th>Idade</th><th>Último peso</th><th>Trajetória</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for item in atencao %}
+          <tr>
+            <td><a href="{% url 'animais:detalhe_terneira' item.animal.pk %}" class="fw-semibold text-decoration-none">{{ item.animal.identificacao }}</a></td>
+            <td class="small">{{ item.animal.get_raca_display }}</td>
+            <td class="small">{% if item.animal.idade_meses %}{{ item.animal.idade_meses }}m{% else %}—{% endif %}</td>
+            <td class="small">{% if item.ultima_pesagem %}{{ item.ultima_pesagem.peso_kg }} kg{% else %}—{% endif %}</td>
+            <td>
+              {% if item.projecao %}
+              <span class="badge badge-{{ item.projecao.status_trajetoria }}">{{ item.projecao.get_status_trajetoria_display }}</span>
+              {% else %}<span class="text-muted small">Sem projeção</span>{% endif %}
+            </td>
+            <td>
+              <a href="{% url 'programas:projecao_reprodutiva' item.animal.pk %}" class="btn btn-sm btn-outline-primary">Calcular projeção</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if not aptas and not atencao %}
+<div class="text-center py-5 text-muted">
+  <i class="bi bi-check2-circle fs-1 d-block opacity-25 mb-2"></i>Nenhuma novilha encontrada.
+</div>
+{% endif %}
+{% endblock %}

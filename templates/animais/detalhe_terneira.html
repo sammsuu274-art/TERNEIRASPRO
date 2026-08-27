@@ -1,0 +1,441 @@
+{% extends "base.html" %}
+{% block title %}{{ terneira.identificacao }}{% endblock %}
+{% block nav_terneiras %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+  @keyframes pulse-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .btn-projecao-piscante {
+    animation: pulse-blink 1.5s ease-in-out infinite;
+  }
+</style>
+{% endblock %}
+
+{% block breadcrumb %}
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb small">
+    <li class="breadcrumb-item"><a href="{% url 'animais:lista_terneiras' %}">Terneiras</a></li>
+    <li class="breadcrumb-item active">{{ terneira.identificacao }}</li>
+  </ol>
+</nav>
+{% endblock %}
+
+{% block content %}
+
+<!-- Cabeçalho do animal -->
+<div class="animal-header mb-4">
+  <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <h4 class="fw-bold mb-0">{{ terneira.identificacao }}</h4>
+        {% if terneira.nome %}<span class="opacity-75">— {{ terneira.nome }}</span>{% endif %}
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="animal-badge-fase">{{ terneira.get_raca_display }}</span>
+        <span class="animal-badge-fase">{{ terneira.get_categoria_display }}</span>
+        {% if terneira.idade_dias %}
+        <span class="animal-badge-fase">{{ terneira.idade_dias }}d ({{ terneira.idade_meses }}m)</span>
+        {% endif %}
+        {% if terneira.mae %}
+        <span class="animal-badge-fase"><i class="bi bi-heart me-1"></i>{{ terneira.mae.identificacao }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'animais:editar_terneira' terneira.pk %}" class="btn btn-light btn-sm">
+        <i class="bi bi-pencil me-1"></i>Editar
+      </a>
+      <div class="dropdown">
+        <button class="btn btn-light btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+          <i class="bi bi-plus-lg me-1"></i>Registrar
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item" href="{% url 'eventos:registrar_pesagem' terneira.pk %}"><i class="bi bi-clipboard-data me-2"></i>Pesagem rápida</a></li>
+          <li><a class="dropdown-item" href="{% url 'eventos:registrar_pesagem_complementar' terneira.pk %}"><i class="bi bi-rulers me-2"></i>Pesagem + medições</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="{% url 'eventos:registrar_ocorrencia' terneira.pk %}"><i class="bi bi-heart-pulse me-2"></i>Ocorrência sanitária</a></li>
+          <li><a class="dropdown-item" href="{% url 'eventos:registrar_vacinacao' terneira.pk %}"><i class="bi bi-syringe me-2"></i>Vacinação</a></li>
+          <li><a class="dropdown-item" href="{% url 'eventos:registrar_colostragem' terneira.pk %}"><i class="bi bi-droplet-half me-2"></i>Colostragem</a></li>
+          <li><a class="dropdown-item" href="{% url 'eventos:registrar_cura_umbigo' terneira.pk %}"><i class="bi bi-bandaid me-2"></i>Cura de umbigo</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li><a class="dropdown-item" href="{% url 'eventos:registrar_desaleitamento' terneira.pk %}"><i class="bi bi-cup-hot me-2"></i>Desaleitamento</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KPIs rápidos -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm p-3 text-center">
+      <div class="text-muted small mb-1">Último peso</div>
+      <div class="fw-bold fs-4">
+        {% if pesagens %}
+        {% with ultima=pesagens|last %}{{ ultima.peso_kg }}{% endwith %} kg
+        {% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      {% if classificacao_peso %}
+      <span class="badge badge-{{ classificacao_peso.status }} mt-1">{{ classificacao_peso.percentual }}% da meta</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm p-3 text-center">
+      <div class="text-muted small mb-1">GMD total</div>
+      <div class="fw-bold fs-4">
+        {% if gmd_total %}{{ gmd_total }} kg/d{% else %}<span class="text-muted">—</span>{% endif %}
+      </div>
+      {% if gmd_recente %}
+      <span class="text-muted small">Últimos 30d: {{ gmd_recente }} kg/d</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm p-3 text-center">
+      <div class="text-muted small mb-1">Ocorrências</div>
+      <div class="fw-bold fs-4">{{ ocorrencias.count }}</div>
+      {% if ocorrencias %}
+      <span class="text-muted small">
+        {% with ativa=ocorrencias|first %}{% if ativa.ativa %}<span class="text-danger">1 ativa</span>{% endif %}{% endwith %}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm p-3 text-center">
+      <div class="text-muted small mb-1">Programa</div>
+      {% if programa %}
+      <div class="fw-bold fs-6 mt-1">{{ programa.percentual_concluido }}% concluído</div>
+      <div class="progress mt-2" style="height:6px;">
+        <div class="progress-bar bg-success" style="width:{{ programa.percentual_concluido }}%"></div>
+      </div>
+      {% else %}
+      <div class="text-muted">—</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div x-data="{tab:'crescimento'}">
+  <ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><button class="nav-link" :class="tab=='crescimento'?'active':''" @click="tab='crescimento'">Crescimento</button></li>
+    <li class="nav-item"><button class="nav-link" :class="tab=='saude'?'active':''" @click="tab='saude'">Saúde</button></li>
+    <li class="nav-item"><button class="nav-link" :class="tab=='alimentacao'?'active':''" @click="tab='alimentacao'">Alimentação</button></li>
+    <li class="nav-item"><button class="nav-link" :class="tab=='origem'?'active':''" @click="tab='origem'">Origem</button></li>
+    {% if programa %}<li class="nav-item"><button class="nav-link" :class="tab=='programa'?'active':''" @click="tab='programa'">Programa</button></li>{% endif %}
+  </ul>
+
+  <div>
+
+  <!-- ABA CRESCIMENTO -->
+  <div x-show="tab=='crescimento'">
+    {% if pesagens %}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Curva de peso</h6></div>
+      <div class="card-body">
+        <div class="chart-container">
+          <canvas id="graficoCrescimento"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between">
+        <h6 class="mb-0 fw-semibold">Pesagens</h6>
+        <div class="btn-group">
+          <a href="{% url 'eventos:registrar_pesagem' terneira.pk %}" class="btn btn-sm btn-outline-success">+ Rápida</a>
+          <button type="button" class="btn btn-sm btn-outline-success dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+            <span class="visually-hidden">Toggle Dropdown</span>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{% url 'eventos:registrar_pesagem' terneira.pk %}">Pesagem rápida</a></li>
+            <li><a class="dropdown-item" href="{% url 'eventos:registrar_pesagem_complementar' terneira.pk %}">Pesagem + medições</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Data</th><th>Peso (kg)</th><th>Idade (dias)</th>
+              <th class="d-none d-md-table-cell">Altura (cm)</th>
+              <th class="d-none d-md-table-cell">PT (cm)</th>
+              <th class="d-none d-md-table-cell">Método</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in pesagens reversed %}
+            <tr>
+              <td>{{ p.data|date:"d/m/Y" }}</td>
+              <td><strong>{{ p.peso_kg }}</strong></td>
+              <td class="text-muted">{{ p.idade_na_pesagem|default:"—" }}</td>
+              <td class="d-none d-md-table-cell text-muted">{{ p.altura_garupa_cm|default:"—" }}</td>
+              <td class="d-none d-md-table-cell text-muted">{{ p.perimetro_toracico_cm|default:"—" }}</td>
+              <td class="d-none d-md-table-cell"><small class="badge bg-light text-dark border">{{ p.get_metodo_display }}</small></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5 text-muted">
+      <i class="bi bi-clipboard-data fs-1 opacity-25 d-block mb-2"></i>
+      Nenhuma pesagem registrada.
+      <div class="mt-2"><a href="{% url 'eventos:registrar_pesagem' terneira.pk %}" class="btn btn-sm btn-success">Registrar pesagem</a></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ABA SAÚDE -->
+  <div x-show="tab=='saude'" x-cloak>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h6 class="fw-semibold mb-0">Ocorrências sanitárias</h6>
+      <a href="{% url 'eventos:registrar_ocorrencia' terneira.pk %}" class="btn btn-sm btn-outline-warning">+ Ocorrência</a>
+    </div>
+    {% for oc in ocorrencias %}
+    <div class="card border-0 shadow-sm mb-2">
+      <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <span class="fw-semibold">{{ oc.get_tipo_display }}</span>
+            <small class="text-muted ms-2">{{ oc.data_inicio|date:"d/m/Y" }}</small>
+            {% if oc.ativa %}<span class="badge bg-danger ms-2">Ativa</span>{% endif %}
+          </div>
+          {% if oc.resultado %}
+          <span class="badge bg-secondary">{{ oc.get_resultado_display }}</span>
+          {% endif %}
+        </div>
+        {% if oc.sinais_clinicos %}<p class="small text-muted mb-0 mt-1">{{ oc.sinais_clinicos }}</p>{% endif %}
+        {% if oc.medicamento %}<small class="text-muted">Medicamento: {{ oc.medicamento }}</small>{% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <p class="text-muted text-center py-4">Sem ocorrências registradas.</p>
+    {% endfor %}
+
+    <!-- Vacinações -->
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
+      <h6 class="fw-semibold mb-0">Vacinações</h6>
+      <a href="{% url 'eventos:registrar_vacinacao' terneira.pk %}" class="btn btn-sm btn-outline-primary">+ Vacina</a>
+    </div>
+    {% for v in vacinacoes %}
+    <div class="d-flex justify-content-between align-items-center border-bottom py-2 small">
+      <span>{{ v.vacina }}</span>
+      <span class="text-muted">{{ v.data|date:"d/m/Y" }}</span>
+    </div>
+    {% empty %}
+    <p class="text-muted small">Sem vacinações registradas.</p>
+    {% endfor %}
+  </div>
+
+  <!-- ABA ALIMENTAÇÃO -->
+  <div x-show="tab=='alimentacao'" x-cloak>
+    <div class="mb-4">
+      <h6 class="fw-semibold mb-3">Colostragem</h6>
+      {% for c in colostragens %}
+      <div class="d-flex gap-3 border-bottom py-2 small">
+        <span class="text-muted" style="min-width:130px;">{{ c.data_hora|date:"d/m/Y H:i" }}</span>
+        <span><strong>{{ c.volume_ml }}ml</strong></span>
+        <span class="text-muted">{{ c.get_origem_display }}</span>
+        <span class="text-muted">{{ c.get_metodo_display }}</span>
+        {% if c.brix %}<span class="text-muted">Brix: {{ c.brix }}%</span>{% endif %}
+        {% if c.tempo_apos_nascimento_horas is not None %}
+        <span class="{% if c.tempo_apos_nascimento_horas <= 2 %}text-success{% elif c.tempo_apos_nascimento_horas <= 6 %}text-warning{% else %}text-danger{% endif %}">
+          {{ c.tempo_apos_nascimento_horas }}h após nasc.
+        </span>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p class="text-muted small">Sem colostragens registradas.</p>
+      {% endfor %}
+    </div>
+    <div>
+      <h6 class="fw-semibold mb-3">Cura de umbigo</h6>
+      {% for cu in curas_umbigo %}
+      <div class="d-flex gap-3 border-bottom py-2 small">
+        <span class="text-muted" style="min-width:130px;">{{ cu.data_hora|date:"d/m/Y H:i" }}</span>
+        <span>{{ cu.produto }}</span>
+        {% if cu.concentracao %}<span class="text-muted">{{ cu.concentracao }}</span>{% endif %}
+        {% if cu.suspeita_onfalite %}<span class="badge bg-danger">Suspeita onfalite</span>{% endif %}
+      </div>
+      {% empty %}
+      <p class="text-muted small">Sem curas de umbigo registradas.</p>
+      {% endfor %}
+    </div>
+    {% if desaleitamento %}
+    <div class="alert alert-success mt-3">
+      <i class="bi bi-check-circle me-2"></i>
+      Desaleitada em <strong>{{ desaleitamento.data|date:"d/m/Y" }}</strong>
+      ({{ desaleitamento.idade_desaleitamento_dias }} dias)
+      — Método: {{ desaleitamento.get_metodo_display }}
+      {% if desaleitamento.peso_kg %} — {{ desaleitamento.peso_kg }} kg{% endif %}
+    </div>
+    {% else %}
+    <div class="mt-3">
+      <a href="{% url 'eventos:registrar_desaleitamento' terneira.pk %}" class="btn btn-sm btn-outline-secondary">
+        Registrar desaleitamento
+      </a>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ABA ORIGEM -->
+  <div x-show="tab=='origem'" x-cloak>
+    {% if parto_origem %}
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Dados do parto</h6></div>
+          <div class="card-body">
+            <table class="table table-sm mb-0">
+              <tr><td class="text-muted">Data</td><td>{{ parto_origem.data_parto|date:"d/m/Y" }}</td></tr>
+              <tr><td class="text-muted">Hora</td><td>{{ parto_origem.hora_parto|default:"Não informada" }}</td></tr>
+              <tr><td class="text-muted">Facilidade</td><td>{{ parto_origem.get_facilidade_display }}</td></tr>
+              <tr><td class="text-muted">Vitalidade</td><td>{{ parto_origem.get_vitalidade_display }}</td></tr>
+              <tr><td class="text-muted">Gemelar</td><td>{% if parto_origem.gemelar %}Sim{% else %}Não{% endif %}</td></tr>
+              <tr><td class="text-muted">Peso ao nascer</td><td>{% if parto_origem.peso_nascimento %}{{ parto_origem.peso_nascimento }} kg{% else %}<span class="text-muted">Não informado</span>{% endif %}</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+          <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Dados da mãe no parto</h6></div>
+          <div class="card-body">
+            <table class="table table-sm mb-0">
+              <tr><td class="text-muted">Vaca mãe</td><td><a href="{% url 'animais:detalhe_vaca' parto_origem.ciclo.vaca.pk %}">{{ parto_origem.ciclo.vaca }}</a></td></tr>
+              <tr><td class="text-muted">Lactação</td><td>{{ parto_origem.ciclo.numero_lactacao|default:"—" }}</td></tr>
+              <tr><td class="text-muted">Dias secos</td><td>{% if parto_origem.ciclo.dias_secos %}{{ parto_origem.ciclo.dias_secos }}d{% else %}<span class="text-muted">—</span>{% endif %}</td></tr>
+              <tr><td class="text-muted">Dias no pré-parto</td><td>{% if parto_origem.ciclo.dias_pre_parto %}{{ parto_origem.ciclo.dias_pre_parto }}d{% else %}<span class="text-muted">—</span>{% endif %}</td></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <p class="text-muted text-center py-4">Parto não registrado via sistema.</p>
+    {% endif %}
+  </div>
+
+  <!-- ABA PROGRAMA -->
+  {% if programa %}
+  <div x-show="tab=='programa'" x-cloak>
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h6 class="fw-semibold mb-0">Programa de acompanhamento</h6>
+          <span class="badge {% if programa.status == 'em_andamento' %}bg-primary{% elif programa.status == 'encerrado' %}bg-secondary{% else %}bg-danger{% endif %}">
+            {{ programa.get_status_display }}
+          </span>
+        </div>
+        <div class="row g-2 small text-muted">
+          <div class="col-6"><strong>Início:</strong> {{ programa.data_inicio|date:"d/m/Y" }}</div>
+          <div class="col-6"><strong>Previsão encerramento:</strong> {{ programa.data_encerramento_prevista|date:"d/m/Y" }}</div>
+          <div class="col-6"><strong>Dias decorridos:</strong> {{ programa.dias_decorridos }}</div>
+          <div class="col-6"><strong>Progresso:</strong> {{ programa.percentual_concluido }}%</div>
+        </div>
+        <div class="progress mt-2" style="height:8px;">
+          <div class="progress-bar bg-success" style="width:{{ programa.percentual_concluido }}%"></div>
+        </div>
+      </div>
+    </div>
+
+    {% if checkpoint %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between">
+        <h6 class="mb-0 fw-semibold">Checkpoint de 6 meses</h6>
+        <a href="{% url 'programas:detalhe_checkpoint' checkpoint.pk %}" class="btn btn-sm btn-outline-success">Ver detalhes</a>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="text-muted small">Status</div>
+            <span class="badge badge-{{ checkpoint.status_checkpoint }} mt-1">{{ checkpoint.get_status_checkpoint_display }}</span>
+          </div>
+          <div class="col-md-4">
+            <div class="text-muted small">Trajetória</div>
+            <span class="badge badge-{{ checkpoint.status_trajetoria }} mt-1">{{ checkpoint.get_status_trajetoria_display }}</span>
+          </div>
+          <div class="col-md-4">
+            <div class="text-muted small">% da meta</div>
+            <strong>{{ checkpoint.percentual_meta|default:"—" }}%</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% elif programa.checkpoint_pendente %}
+    <div class="alert alert-warning">
+      <i class="bi bi-alarm me-2"></i>
+      Checkpoint de 6 meses pendente.
+      <a href="{% url 'programas:checkpoint' programa.pk %}" class="btn btn-sm btn-warning ms-2">Realizar agora</a>
+    </div>
+    {% else %}
+    <p class="text-muted small">Checkpoint ainda não disponível (animal com {{ programa.dias_decorridos }} dias).</p>
+    {% endif %}
+
+    <!-- Projeção Reprodutiva -->
+    <div class="mt-3">
+      <a href="{% url 'programas:projecao_reprodutiva' terneira.pk %}" class="btn btn-sm btn-outline-primary btn-projecao-piscante">
+        <i class="bi bi-graph-up me-1"></i>Ver projeção de primeira IA
+      </a>
+    </div>
+  </div>
+  {% endif %}
+
+  </div>
+</div><!-- /x-data tabs -->
+
+{% endblock %}
+
+{% block extra_scripts %}
+{% if pesagens %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('graficoCrescimento');
+    if (!ctx) return;
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ grafico_datas|safe }},
+        datasets: [
+          {
+            label: 'Peso real (kg)',
+            data: {{ grafico_pesos|safe }},
+            borderColor: '#198754',
+            backgroundColor: 'rgba(25,135,84,0.08)',
+            tension: 0.3,
+            fill: true,
+            pointRadius: 5,
+          },
+          {% if grafico_meta %}
+          {
+            label: 'Meta (kg)',
+            data: {{ grafico_meta|safe }},
+            borderColor: '#fd7e14',
+            borderDash: [6, 3],
+            pointRadius: 0,
+            tension: 0.3,
+            fill: false,
+          },
+          {% endif %}
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          y: { title: { display: true, text: 'Peso (kg)' } },
+          x: { title: { display: true, text: 'Data' } }
+        }
+      }
+    });
+  });
+</script>
+{% endif %}
+{% endblock %}

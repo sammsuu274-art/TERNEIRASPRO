@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Metas Reprodutivas{% endblock %}
+{% block nav_config %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0">Metas Reprodutivas</h4>
+  <a href="{% url 'config_tecnica:nova_meta_reprodutiva' %}" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i>Nova</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+  {% for m in metas %}
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <h6 class="fw-bold mb-0">{{ m.nome }}</h6>
+            <span class="badge bg-success bg-opacity-10 text-success">{{ m.get_raca_display }}</span>
+          </div>
+          {% if m.ativa %}<span class="badge bg-success">Ativa</span>{% else %}<span class="badge bg-secondary">Inativa</span>{% endif %}
+        </div>
+        <table class="table table-sm mb-0">
+          <tr><td class="text-muted small">Peso adulto médio</td><td>{{ m.peso_adulto_medio_kg|default:"—" }} kg</td></tr>
+          <tr><td class="text-muted small">Percentual</td><td>{{ m.percentual_peso_adulto }}%</td></tr>
+          <tr><td class="text-muted small">Peso alvo calculado</td><td><strong>{{ m.peso_alvo_calculado|default:m.peso_minimo_kg|default:"—" }} kg</strong></td></tr>
+          <tr><td class="text-muted small">Idade alvo</td><td>{{ m.idade_alvo_meses }} meses</td></tr>
+          <tr><td class="text-muted small">GMD mínimo recria</td><td>{{ m.gmd_minimo_recria|default:"—" }} kg/d</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="col-12 text-center py-5 text-muted">
+    <i class="bi bi-heart fs-1 d-block opacity-25 mb-2"></i>
+    Nenhuma meta reprodutiva. <a href="{% url 'config_tecnica:nova_meta_reprodutiva' %}">Criar agora</a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

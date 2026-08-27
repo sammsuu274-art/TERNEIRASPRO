@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ vaca.identificacao }}{% endblock %}
+{% block nav_vacas %}active{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'animais:lista_vacas' %}">Vacas</a></li>
+  <li class="breadcrumb-item active">{{ vaca.identificacao }}</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="animal-header mb-4">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      <h4 class="fw-bold mb-1">{{ vaca.identificacao }}{% if vaca.nome %} — {{ vaca.nome }}{% endif %}</h4>
+      <span class="animal-badge-fase">{{ vaca.get_raca_display }}</span>
+      <span class="animal-badge-fase ms-2">{{ vaca.get_categoria_display }}</span>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'animais:novo_ciclo' vaca.pk %}" class="btn btn-light btn-sm">
+        <i class="bi bi-plus-circle me-1"></i>Novo ciclo
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Ciclos reprodutivos</h6></div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Lactação</th><th>Previsão Parto</th><th>Dias Secos</th><th>Situação</th></tr>
+            </thead>
+            <tbody>
+              {% for c in ciclos %}
+              <tr>
+                <td>{{ c.numero_lactacao|default:"—" }}</td>
+                <td class="small">{{ c.data_previsao_parto|date:"d/m/Y"|default:"—" }}</td>
+                <td class="small">{% if c.dias_secos %}{{ c.dias_secos }}d{% else %}—{% endif %}</td>
+                <td><span class="badge bg-secondary small">{{ c.get_situacao_display }}</span></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-muted text-center py-3">Sem ciclos registrados.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Filhos nascidos</h6></div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+              <tr><th>Identificação</th><th>Nascimento</th><th>Sexo</th><th>Situação</th></tr>
+            </thead>
+            <tbody>
+              {% for f in filhos %}
+              <tr>
+                <td>
+                  {% if f.sexo == 'F' %}
+                  <a href="{% url 'animais:detalhe_terneira' f.pk %}" class="text-decoration-none fw-semibold">{{ f.identificacao }}</a>
+                  {% else %}
+                  <span class="fw-semibold">{{ f.identificacao }}</span>
+                  {% endif %}
+                </td>
+                <td class="small text-muted">{{ f.data_nascimento|date:"d/m/Y"|default:"—" }}</td>
+                <td><span class="badge {% if f.sexo == 'F' %}bg-danger bg-opacity-75{% else %}bg-primary bg-opacity-75{% endif %}">{{ f.get_sexo_display }}</span></td>
+                <td><span class="badge bg-secondary small">{{ f.get_situacao_display }}</span></td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" class="text-muted text-center py-3">Sem filhos registrados.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

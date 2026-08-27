@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Banco de Colostro{% endblock %}
+{% block nav_colostro %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-droplet-half text-info me-2"></i>Banco de Colostro</h4>
+  <a href="{% url 'eventos:novo_banco_colostro' %}" class="btn btn-success"><i class="bi bi-plus-lg me-1"></i>Novo registro</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+  {% with disponivel=banco|dictsort:"status"|first %}
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 text-center">
+      <div class="kpi-value text-success">{{ banco|length }}</div>
+      <div class="kpi-label">Total registros</div>
+    </div>
+  </div>
+  {% endwith %}
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Lote/ID</th>
+            <th>Data coleta</th>
+            <th>Volume</th>
+            <th>Brix</th>
+            <th>Origem</th>
+            <th>Armazenamento</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in banco %}
+          <tr>
+            <td class="fw-semibold">{{ b.lote|default:b.pk }}</td>
+            <td class="small">{{ b.data_coleta|date:"d/m/Y" }}</td>
+            <td>{{ b.volume_ml }}ml</td>
+            <td class="small">
+              {% if b.brix %}
+              <span class="{% if b.brix >= 22 %}text-success{% else %}text-danger{% endif %}">{{ b.brix }}%</span>
+              {% else %}—{% endif %}
+            </td>
+            <td class="small text-muted">{{ b.vaca_origem|default:"—" }}</td>
+            <td class="small text-muted">
+              {% if b.congelado %}<i class="bi bi-snow text-info"></i> Congelado{% else %}Refrigerado{% endif %}
+              {% if b.local_armazenamento %} · {{ b.local_armazenamento }}{% endif %}
+            </td>
+            <td>
+              <span class="badge {% if b.status == 'disponivel' %}bg-success{% elif b.status == 'utilizado' %}bg-secondary{% else %}bg-danger{% endif %}">
+                {{ b.get_status_display }}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-muted py-5">
+            <i class="bi bi-droplet fs-1 d-block opacity-25 mb-2"></i>Nenhum colostro registrado.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

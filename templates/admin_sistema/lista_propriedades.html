@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Propriedades{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'core:painel_admin' %}">Administração</a></li>
+  <li class="breadcrumb-item active">Propriedades</li>
+</ol></nav>
+{% endblock %}
+
+{% block page_header %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="fw-bold mb-0"><i class="bi bi-house text-success me-2"></i>Propriedades</h4>
+  <a href="{% url 'core:nova_propriedade' %}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Nova propriedade
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Nome</th>
+            <th class="d-none d-md-table-cell">Município/UF</th>
+            <th class="d-none d-md-table-cell">Responsável técnico</th>
+            <th class="d-none d-md-table-cell">Contato</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in propriedades %}
+          <tr class="{% if propriedade_ativa and propriedade_ativa.pk == p.pk %}table-success{% endif %}">
+            <td>
+              <span class="fw-semibold">{{ p.nome }}</span>
+              {% if propriedade_ativa and propriedade_ativa.pk == p.pk %}
+              <span class="badge bg-success ms-1">Ativa</span>
+              {% endif %}
+            </td>
+            <td class="d-none d-md-table-cell text-muted small">
+              {{ p.municipio|default:"—" }}{% if p.estado %}/{{ p.estado }}{% endif %}
+            </td>
+            <td class="d-none d-md-table-cell text-muted small">{{ p.responsavel_tecnico|default:"—" }}</td>
+            <td class="d-none d-md-table-cell text-muted small">{{ p.contato|default:"—" }}</td>
+            <td>
+              <span class="badge {% if p.ativa %}bg-success{% else %}bg-secondary{% endif %}">
+                {% if p.ativa %}Ativa{% else %}Inativa{% endif %}
+              </span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm">
+                <a href="{% url 'core:editar_propriedade' p.pk %}" class="btn btn-outline-secondary" title="Editar">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                {% if not propriedade_ativa or propriedade_ativa.pk != p.pk %}
+                <form method="post" action="{% url 'core:selecionar_propriedade_admin' p.pk %}" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{% url 'core:lista_propriedades' %}">
+                  <button type="submit" class="btn btn-outline-success" title="Tornar propriedade ativa">
+                    <i class="bi bi-arrow-right-circle"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="text-center text-muted py-4">
+            Nenhuma propriedade cadastrada.
+          </td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

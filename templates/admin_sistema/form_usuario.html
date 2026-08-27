@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'core:painel_admin' %}">Administração</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'core:lista_usuarios' %}">Usuários</a></li>
+  <li class="breadcrumb-item active">{{ titulo }}</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h5 class="mb-0 fw-bold">{{ titulo }}</h5></div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+
+          {% if form.non_field_errors %}
+          <div class="alert alert-danger small">{{ form.non_field_errors.0 }}</div>
+          {% endif %}
+
+          {% if usuario %}
+          {# Formulário de edição #}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nome completo</label>
+            {{ form.nome_completo }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            {{ form.email }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Telefone</label>
+            {{ form.telefone }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nova senha <span class="text-muted">(deixe em branco para não alterar)</span></label>
+            {{ form.nova_senha }}
+          </div>
+          <div class="mb-4">
+            <div class="form-check">{{ form.ativo }}<label class="form-check-label ms-2">Usuário ativo</label></div>
+          </div>
+          {% else %}
+          {# Formulário de criação #}
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Login (usuário) *</label>
+            {{ form.username }}
+            {% if form.username.errors %}<div class="text-danger small">{{ form.username.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nome completo *</label>
+            {{ form.nome_completo }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">E-mail</label>
+            {{ form.email }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Telefone</label>
+            {{ form.telefone }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Senha *</label>
+            {{ form.senha }}
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Confirmar senha *</label>
+            {{ form.confirmar_senha }}
+            {% if form.confirmar_senha.errors %}<div class="text-danger small">{{ form.confirmar_senha.errors.0 }}</div>{% endif %}
+          </div>
+          {% endif %}
+
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'core:lista_usuarios' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-success px-4">
+              <i class="bi bi-check-lg me-1"></i>Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if usuario %}
+    <div class="card border-0 shadow-sm mt-3">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-semibold">Propriedades vinculadas</h6>
+        <a href="{% url 'core:novo_vinculo' %}" class="btn btn-sm btn-outline-warning">+ Vínculo</a>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th>Propriedade</th><th>Papel</th><th></th></tr></thead>
+          <tbody>
+            {% for perfil in usuario.perfis.all %}
+            <tr>
+              <td>{{ perfil.propriedade.nome }}</td>
+              <td><span class="badge bg-secondary">{{ perfil.get_papel_display }}</span></td>
+              <td>
+                <form method="post" action="{% url 'core:remover_vinculo' perfil.pk %}" class="d-inline"
+                      onsubmit="return confirm('Remover vínculo?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-muted text-center py-2">Sem vínculos.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

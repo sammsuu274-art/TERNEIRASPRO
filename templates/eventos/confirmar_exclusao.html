@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Confirmar Exclusão{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6">
+    <div class="card border-danger shadow-sm">
+      <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Confirmar Exclusão
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-warning mb-4">
+          <strong>⚠️ Atenção!</strong> Esta ação não pode ser desfeita.
+        </div>
+
+        <p class="mb-3">Você está prestes a excluir:</p>
+        
+        <div class="bg-light p-3 rounded mb-4">
+          <h6 class="text-muted mb-2">{{ tipo }}</h6>
+          <p class="mb-1"><strong>Animal:</strong> {{ animal.identificacao }}</p>
+          <p class="mb-0"><strong>Detalhes:</strong> {{ detalhes }}</p>
+        </div>
+
+        <div class="alert alert-info mb-4">
+          <small>
+            <i class="bi bi-info-circle me-1"></i>
+            As conformidades relacionadas a este evento também serão removidas.
+          </small>
+        </div>
+
+        <form method="post">
+          {% csrf_token %}
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% if animal.sexo == 'F' and animal.categoria in 'terneira,novilha' %}{% url 'animais:detalhe_terneira' animal.pk %}{% else %}{% url 'animais:detalhe_vaca' animal.pk %}{% endif %}" 
+               class="btn btn-secondary">
+              <i class="bi bi-x-circle me-1"></i>
+              Cancelar
+            </a>
+            <button type="submit" class="btn btn-danger">
+              <i class="bi bi-trash me-1"></i>
+              Sim, Excluir
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="mt-3 text-center">
+      <small class="text-muted">
+        <i class="bi bi-shield-check me-1"></i>
+        Apenas eventos podem ser excluídos, não animais ou propriedades
+      </small>
+    </div>
+  </div>
+</div>
+{% endblock %}

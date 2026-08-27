@@ -1,0 +1,26 @@
+{% comment %}
+Partial: exibe um KPI de conformidade com cor semântica.
+Variáveis esperadas:
+  dados  → dict com percentual, total, conformes, sem_dado, confiavel
+  verde  → threshold para verde (ex: 90)
+  amarelo → threshold para amarelo (ex: 70)
+{% endcomment %}
+{% if dados.percentual is not None %}
+  {% if dados.percentual >= verde %}
+    <div class="kpi-value text-success">{{ dados.percentual }}%</div>
+  {% elif dados.percentual >= amarelo %}
+    <div class="kpi-value text-warning">{{ dados.percentual }}%</div>
+  {% else %}
+    <div class="kpi-value text-danger">{{ dados.percentual }}%</div>
+  {% endif %}
+  <div class="text-muted small">{{ dados.conformes }}/{{ dados.total }} eventos</div>
+  {% if not dados.confiavel %}
+  <div class="text-warning small"><i class="bi bi-exclamation-triangle me-1"></i>Poucos dados</div>
+  {% endif %}
+  {% if dados.sem_dado %}
+  <div class="text-muted" style="font-size:0.7rem;">{{ dados.sem_dado }} sem dado</div>
+  {% endif %}
+{% else %}
+  <div class="kpi-value text-muted">—</div>
+  <div class="text-muted small">Sem registros</div>
+{% endif %}

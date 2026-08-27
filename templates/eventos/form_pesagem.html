@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Registrar Pesagem{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  {% if animal.sexo == 'F' %}
+  <li class="breadcrumb-item"><a href="{% url 'animais:lista_terneiras' %}">Terneiras</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'animais:detalhe_terneira' animal.pk %}">{{ animal.identificacao }}</a></li>
+  {% else %}
+  <li class="breadcrumb-item"><a href="{% url 'animais:lista_vacas' %}">Vacas</a></li>
+  <li class="breadcrumb-item"><a href="{% url 'animais:detalhe_vaca' animal.pk %}">{{ animal.identificacao }}</a></li>
+  {% endif %}
+  <li class="breadcrumb-item active">Pesagem</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white">
+        <h5 class="mb-0 fw-bold">Pesagem — {{ animal.identificacao }}</h5>
+        {% if animal.idade_dias %}
+        <small class="text-muted">Idade: {{ animal.idade_dias }} dias ({{ animal.idade_meses }} meses)</small>
+        {% endif %}
+      </div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="form-section-title">Dados da pesagem</div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">{{ form.data.label_tag }}{{ form.data }}</div>
+            <div class="col-md-6">{{ form.peso_kg.label_tag }}{{ form.peso_kg }}</div>
+            <div class="col-12">{{ form.metodo.label_tag }}{{ form.metodo }}</div>
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+          </div>
+
+          <div class="alert alert-info small">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Foco na gestão:</strong> Registre peso e método. O sistema calcula automaticamente GMD, comparação com metas e alertas de desenvolvimento.
+            <br>Medições complementares (altura, perímetro, ECC) estão disponíveis no Django Admin se necessário.
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            {% if animal.sexo == 'F' %}
+            <a href="{% url 'animais:detalhe_terneira' animal.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+            {% else %}
+            <a href="{% url 'animais:detalhe_vaca' animal.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+            {% endif %}
+            <button type="submit" class="btn btn-success px-4"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {% if pesagens %}
+    <div class="card border-0 shadow-sm mt-3">
+      <div class="card-header bg-white"><h6 class="mb-0">Últimas pesagens</h6></div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+          <thead class="table-light"><tr><th>Data</th><th>Peso (kg)</th><th>Método</th></tr></thead>
+          <tbody>
+            {% for p in pesagens %}
+            <tr>
+              <td class="small">{{ p.data|date:"d/m/Y" }}</td>
+              <td><strong>{{ p.peso_kg }}</strong></td>
+              <td class="small text-muted">{{ p.get_metodo_display }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

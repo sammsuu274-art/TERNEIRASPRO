@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Programa — {{ terneira.identificacao }}{% endblock %}
+{% block nav_programas %}active{% endblock %}
+
+{% block breadcrumb %}
+<nav class="mb-3"><ol class="breadcrumb small">
+  <li class="breadcrumb-item"><a href="{% url 'programas:lista_programas' %}">Programas</a></li>
+  <li class="breadcrumb-item active">{{ terneira.identificacao }}</li>
+</ol></nav>
+{% endblock %}
+
+{% block content %}
+<div class="animal-header mb-4">
+  <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+    <div>
+      <h4 class="fw-bold mb-1">Programa — {{ terneira.identificacao }}</h4>
+      <span class="animal-badge-fase">{{ terneira.get_raca_display }}</span>
+      <span class="animal-badge-fase ms-2">{{ programa.get_status_display }}</span>
+      <span class="animal-badge-fase ms-2">{{ programa.percentual_concluido }}% concluído</span>
+    </div>
+    <a href="{% url 'animais:detalhe_terneira' terneira.pk %}" class="btn btn-light btn-sm">Ver ficha completa</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 text-center">
+      <div class="kpi-label">Início</div>
+      <div class="fw-bold">{{ programa.data_inicio|date:"d/m/Y" }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 text-center">
+      <div class="kpi-label">Previsão encerramento</div>
+      <div class="fw-bold">{{ programa.data_encerramento_prevista|date:"d/m/Y" }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 text-center">
+      <div class="kpi-label">Dias decorridos</div>
+      <div class="fw-bold">{{ programa.dias_decorridos }}</div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 text-center">
+      <div class="kpi-label">GMD total</div>
+      <div class="fw-bold">{{ gmd_total|default:"—" }} kg/d</div>
+    </div>
+  </div>
+</div>
+
+{% if checkpoint %}
+<div class="alert alert-success d-flex align-items-center gap-3">
+  <i class="bi bi-clipboard-check fs-4"></i>
+  <div>
+    Checkpoint realizado em {{ checkpoint.data_avaliacao|date:"d/m/Y" }} —
+    <strong>{{ checkpoint.get_status_checkpoint_display }}</strong> |
+    Trajetória: <strong>{{ checkpoint.get_status_trajetoria_display }}</strong>
+    <a href="{% url 'programas:detalhe_checkpoint' checkpoint.pk %}" class="ms-2 btn btn-sm btn-success">Ver detalhes</a>
+  </div>
+</div>
+{% elif programa.checkpoint_pendente %}
+<div class="alert alert-warning d-flex align-items-center gap-3">
+  <i class="bi bi-alarm fs-4"></i>
+  <div>
+    Checkpoint de 6 meses disponível para realização ({{ programa.dias_decorridos }} dias).
+    <a href="{% url 'programas:checkpoint' programa.pk %}" class="ms-2 btn btn-sm btn-warning">Realizar checkpoint</a>
+  </div>
+</div>
+{% endif %}
+
+{% if pesagens %}
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white"><h6 class="mb-0 fw-semibold">Pesagens no programa</h6></div>
+  <div class="table-responsive">
+    <table class="table table-sm table-hover mb-0">
+      <thead class="table-light"><tr><th>Data</th><th>Peso (kg)</th><th>Idade (dias)</th><th>Método</th></tr></thead>
+      <tbody>
+        {% for p in pesagens reversed %}
+        <tr>
+          <td>{{ p.data|date:"d/m/Y" }}</td>
+          <td><strong>{{ p.peso_kg }}</strong></td>
+          <td class="text-muted">{{ p.idade_na_pesagem|default:"—" }}</td>
+          <td class="small text-muted">{{ p.get_metodo_display }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

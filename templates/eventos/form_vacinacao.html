@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Vacinação{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white"><h5 class="mb-0 fw-bold">Vacinação — {{ animal.identificacao }}</h5></div>
+      <div class="card-body p-4">
+        <form method="post">{% csrf_token %}
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">{{ form.data.label_tag }}{{ form.data }}</div>
+            <div class="col-md-8">{{ form.vacina.label_tag }}{{ form.vacina }}</div>
+            <div class="col-md-4">{{ form.fabricante.label_tag }}{{ form.fabricante }}</div>
+            <div class="col-md-4">{{ form.lote_produto.label_tag }}{{ form.lote_produto }}</div>
+            <div class="col-md-2">{{ form.dose.label_tag }}{{ form.dose }}</div>
+            <div class="col-md-2">{{ form.via.label_tag }}{{ form.via }}</div>
+            <div class="col-12">{{ form.observacoes.label_tag }}{{ form.observacoes }}</div>
+          </div>
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="{% url 'animais:detalhe_terneira' animal.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary px-4">Registrar vacinação</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
