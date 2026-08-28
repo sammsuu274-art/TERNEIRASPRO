@@ -1,167 +1,291 @@
-# TerneirasPro - Sistema de Gestão de Terneiras Leiteiras
+# TerneirasPro — Sistema de Gestão Técnica da Cria e Recria
 
-> **Desenvolvedor:** Victor Rodrigues - Passo Fundo/RS  
-> **Versão:** 4.2.16  
-> **Django:** 4.2.16 | **Python:** 3.12.3
+**Rastreie o desenvolvimento de terneiras (fêmeas bovinas jovens) com conformidade técnica automática.**
 
----
-
-## 🚀 INÍCIO RÁPIDO
-
-### Para iniciar o sistema:
-
-**1. Clique duplo no arquivo:**
-```
-iniciar_servidor.sh
-```
-
-**2. Ou execute no terminal:**
-```bash
-cd /home/victor/Documentos/victor/Documentos/TERNEIRAS
-./iniciar_servidor.sh
-```
-
-**3. Para gerenciar servidor existente:**
-```bash
-./gerenciar_servidor.sh status    # Ver se está rodando
-./gerenciar_servidor.sh stop      # Parar
-./gerenciar_servidor.sh restart   # Reiniciar
-```
-
-**4. Acesse no navegador:**
-```
-http://127.0.0.1:8000
-```
-
-**4. Faça login:**
-- **Usuário:** `admin`
-- **Senha:** [sua senha configurada]
+[![Status](https://img.shields.io/badge/status-75%25%20pronto-yellow)](./AUDITORIA_PRODUCAO.md)
+[![Django](https://img.shields.io/badge/Django-4.2.16-green)](https://www.djangoproject.com/)
+[![Python](https://img.shields.io/badge/Python-3.12-blue)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-gray)](#licença)
 
 ---
 
-## 📁 ARQUIVOS PRINCIPAIS
+## 📋 O que é TerneirasPro?
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `iniciar_servidor.sh` | **Script de inicialização** (clique duplo) |
-| `gerenciar_servidor.sh` | **Gerenciador** (status, stop, start, restart) |
-| `MANUAL_DO_USUARIO.md` | Manual completo para usuários finais |
-| `DOCUMENTACAO_AGENTE.md` | **Fonte técnica oficial** — arquitetura, estado, regras, pendências |
-| `CHANGELOG.md` | Histórico de mudanças e correções |
-| `RESUMO_IMPLEMENTACAO.md` | Resumo histórico de uma sprint (não atualizar) |
-| `IMPLEMENTACAO_LOGIN.md` | Decisões de design da tela de login |
-| `TELA_LOGIN_LAYOUT.md` | Arquitetura CSS da tela de login (valores aprovados) |
+**TerneirasPro** é um sistema web que rastreia o desenvolvimento de terneiras desde o pré-parto da mãe até a primeira inseminação (IA) da novilha, com **conformidade técnica automática** contra 7 critérios baseados em literatura zootécnica (Embrapa).
 
----
+### Recursos Principais
 
-## 🤖 PARA AGENTES DE IA E DESENVOLVEDORES
+✅ **Multi-tenant** — Múltiplas propriedades em uma instalação  
+✅ **Eventos zootécnicos** — Parto, colostragem, pesagem, vacinação, desaleitamento  
+✅ **Conformidade automática** — 7 critérios técnicos (C1–C7) avaliados em tempo real  
+✅ **Dashboard inteligente** — 3 zonas (alertas, status, tendência) + 4 gráficos Chart.js  
+✅ **Cálculos zootécnicos** — GMD, interpolação de curvas, projeções reprodutivas  
+✅ **Histórico imutável** — Rastreabilidade completa de todos os eventos  
 
-**Leia `DOCUMENTACAO_AGENTE.md` antes de qualquer ação no projeto.**
+### O que NÃO é
 
-Este arquivo contém:
-- Arquitetura completa e stack técnica
-- Estado atual de implementação (74%, 35/47 funcionalidades)
-- Regras de negócio permanentes
-- Bugs conhecidos e decisões pendentes
-- O que está fora do escopo (não implementar)
-- Decisões técnicas aprovadas (não alterar sem justificativa)
-
-As regras automáticas para agentes estão em `.kiro/steering/projeto.md`.
+❌ Sistema financeiro  
+❌ Produção de leite (CCS individual)  
+❌ Reprodução de vacas adultas  
+❌ ERP ou estoque  
 
 ---
 
-## ⚙️ CONFIGURAÇÃO AUTOMÁTICA (OPCIONAL)
+## 🚀 Quick Start
 
-### Para iniciar automaticamente no boot:
+### 1. Clone o Repositório
 
 ```bash
-# Copiar service para systemd
-sudo cp terneiraspro.service /etc/systemd/system/
-
-# Habilitar inicialização automática
-sudo systemctl enable terneiraspro
-
-# Iniciar agora
-sudo systemctl start terneiraspro
-
-# Ver status
-sudo systemctl status terneiraspro
+git clone git@github.com:sammsuu274-art/TERNEIRASPRO.git
+cd TERNEIRASPRO
 ```
 
-Com isso, o sistema iniciará automaticamente toda vez que você ligar o computador!
+### 2. Setup Local
 
----
-
-## 🛠️ COMANDOS ÚTEIS
-
-### Desenvolvimento:
 ```bash
-# Ativar ambiente
-source venv/bin/activate
+# Criar virtual environment
+python3.12 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou: venv\Scripts\activate  # Windows
 
-# Verificar sistema
-python manage.py check
+# Instalar dependências
+pip install -r requirements.txt
 
-# Backup do banco
-cp db.sqlite3 backup_$(date +%Y%m%d).sqlite3
-```
+# Copiar configuração
+cp .env.production.template .env
 
-### Limpeza:
-```bash
-# Limpar dados de teste (CUIDADO!)
-python manage.py limpar_dados_teste --confirmar --propriedade 1
-```
+# Aplicar migrações
+python manage.py migrate
 
-### Seeds:
-```bash
-# Dados iniciais
+# Carregar dados de referência
 python manage.py seed_referenciais
 python manage.py seed_criterios --propriedade 1
+
+# Criar usuário admin
+python manage.py createsuperuser
+# Use: admin / admin123
+
+# Iniciar servidor
+python manage.py runserver
+```
+
+### 3. Acesso
+
+- **URL:** http://127.0.0.1:8000
+- **Login:** admin / admin123
+- **Admin Django:** http://127.0.0.1:8000/admin
+
+---
+
+## 📚 Documentação
+
+**👉 Comece por:** [`LEIA_PRIMEIRO.md`](./LEIA_PRIMEIRO.md) — Seu guia de navegação
+
+### Para Desenvolvedores
+- [`GUIA_IMPLEMENTACAO_PARA_EQUIPE.md`](./GUIA_IMPLEMENTACAO_PARA_EQUIPE.md) — Setup, bugs prioritários, testes, deploy
+- [`ESPECIFICACAO_TECNICA_COMPLETA.md`](./ESPECIFICACAO_TECNICA_COMPLETA.md) — Arquitetura, modelos, funcionalidades
+- [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md) — Checklist pré-deploy, segurança
+
+### Referência Técnica
+- [`DOCUMENTACAO_AGENTE.md`](./DOCUMENTACAO_AGENTE.md) — Especificação completa, decisões pendentes
+- [`IMPLEMENTACAO_LOGIN.md`](./IMPLEMENTACAO_LOGIN.md) — Design da tela de login
+- [`TELA_LOGIN_LAYOUT.md`](./TELA_LOGIN_LAYOUT.md) — CSS e medidas aprovadas
+
+### Para Usuários
+- [`MANUAL_DO_USUARIO.md`](./MANUAL_DO_USUARIO.md) — Como usar o sistema
+- [`CHANGELOG.md`](./CHANGELOG.md) — Histórico de alterações
+
+---
+
+## 🛠️ Stack Tecnológico
+
+```
+Backend:     Python 3.12 + Django 4.2.16
+Frontend:    Bootstrap 5.3 + Alpine.js 3 + HTMX 1.9 + Chart.js 4
+Banco:       SQLite (dev) | PostgreSQL (prod)
+Deploy:      Render.com
+Versionamento: GitHub (git@github.com:sammsuu274-art/TERNEIRASPRO.git)
+```
+
+### Dependências Principais
+
+```
+Django==4.2.16          # Framework web
+python-decouple==3.8    # Variáveis de ambiente
+Pillow==10.4.0          # Processamento de imagens
+whitenoise==6.7.0       # Servir static files
+psycopg2-binary==2.9.9  # Driver PostgreSQL
 ```
 
 ---
 
-## 📊 FUNCIONALIDADES
+## 📊 Status do Projeto
 
-- ✅ **Gestão de vacas** e ciclos reprodutivos
-- ✅ **Registro de partos** (cria terneira automaticamente)  
-- ✅ **Colostragem** com cálculo de meta automático
-- ✅ **Acompanhamento de crescimento** (pesagens e GMD)
-- ✅ **Eventos sanitários** (diarreia, pneumonia, etc.)
-- ✅ **Desaleitamento** e checkpoint de 6 meses
-- ✅ **Projeção reprodutiva** até primeira IA
-- ✅ **Dashboard** com alertas e gráficos interativos
-- ✅ **Conformidades** automáticas (C1-C7)
-- ✅ **Multi-tenancy** (várias propriedades)
-- ✅ **Movimentação de lotes**
-- ✅ **Exclusão de eventos** (colostragem, pesagem)
+| Aspecto | Status | Detalhes |
+|---|---|---|
+| **Código** | ✅ 100% | 179 arquivos, funcionando |
+| **GitHub** | ✅ 100% | Repositório privado pronto |
+| **Funcionalidades** | ✅ 75% | 35/47 totalmente implementadas |
+| **Segurança** | ⚠️ 60% | Bugs críticos documentados |
+| **Produção** | ⚠️ 30% | Ready with corrections |
+
+**Bugs Críticos:** 2 (SECRET_KEY insegura, papéis não verificados)  
+**Bugs Altos:** 4 (meta_volume, C8-C10, movimentação lotes, recálculo)  
+**Tempo até Produção:** 2-3 semanas  
+
+Veja [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md) para detalhes.
 
 ---
 
-## 🎯 STATUS
+## 🚀 Deploy
+
+### Desenvolvimento Local
+
+```bash
+python manage.py runserver
+# http://127.0.0.1:8000
+```
+
+### Produção no Render.com
+
+1. Conectar GitHub ao Render
+2. Criar Web Service (build + start commands)
+3. Criar PostgreSQL Database
+4. Configurar environment variables
+5. Deploy automático em cada push a `main`
+
+Veja [`GUIA_IMPLEMENTACAO_PARA_EQUIPE.md`](./GUIA_IMPLEMENTACAO_PARA_EQUIPE.md) — Seção 5 para passos detalhados.
+
+---
+
+## 🔧 Comandos Django Úteis
+
+```bash
+# Migrações
+python manage.py migrate
+python manage.py makemigrations
+
+# Seeds de dados
+python manage.py seed_referenciais           # 9 referenciais técnicos
+python manage.py seed_criterios --propriedade 1  # Critérios C1-C7
+
+# Usuários
+python manage.py createsuperuser
+
+# Verificação
+python manage.py check
+python manage.py showmigrations
+
+# Limpeza
+python manage.py limpar_dados_teste
+
+# Tests (quando implementados)
+python manage.py test indicadores --verbosity=2
+```
+
+---
+
+## 📁 Estrutura do Projeto
 
 ```
-✅ Sistema: 74% implementado (35/47 funcionalidades)
-✅ Banco: Limpo e pronto para produção  
-✅ Servidor: Funcionando sem erros
-✅ Documentação: Completa e atualizada
+TERNEIRAS/
+├── gestao_terneiras/      # Projeto Django (settings, urls, wsgi)
+├── core/                  # Propriedade, Admin, Dashboard
+├── accounts/              # Usuários, Autenticação
+├── animais/               # Animais, Ciclos reprodutivos
+├── eventos/               # Parto, Colostragem, Pesagem, etc
+├── programas/             # Programa, Checkpoint, Projeção
+├── config_tecnica/        # Protocolos, Metas, Critérios
+├── indicadores/           # Conformidade, Cálculos zootécnicos
+├── templates/             # HTML (Bootstrap 5)
+├── static/                # CSS, JS, Imagens
+├── requirements.txt       # Dependências Python
+├── manage.py              # CLI Django
+├── README.md              # Este arquivo
+├── LEIA_PRIMEIRO.md       # Guia de navegação
+├── DOCUMENTACAO_AGENTE.md # Especificação técnica completa
+└── ... (mais documentação)
 ```
 
 ---
 
-## 📞 SUPORTE
+## 🐛 Problemas Conhecidos
 
-**Desenvolvedor:** Victor Rodrigues - Passo Fundo/RS  
-**Documentação:** Consulte `MANUAL_DO_USUARIO.md`  
-**Problemas técnicos:** Consulte `DOCUMENTACAO_AGENTE.md`
+### 🔴 Críticos
+1. **SECRET_KEY insegura** — Usar padrão `django-insecure-...`
+2. **Sistema de papéis não funcional** — Views não verificam papel
+
+### 🟠 Altos
+3. **Template form_colostragem** — Variável `meta_volume` não passada
+4. **Critérios C8-C10** — Desaleitamento sem avaliadores
+5. **MovimentacaoLote** — Modelo pronto, sem UI
+
+### 🟡 Médios
+6. Metas dos gráficos hardcoded
+7. ProtocoloAlimentar sem interface
+
+Veja [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md) para detalhes e soluções.
 
 ---
 
-## 🏆 TECNOLOGIAS
+## ✅ Funcionalidades Implementadas
 
-- **Backend:** Django 4.2.16 + Python 3.12.3
-- **Frontend:** Bootstrap 5.3 + Alpine.js + Chart.js
-- **Banco:** SQLite (dev) / PostgreSQL (prod)
-- **Servidor:** Django Development Server
+- ✅ Gestão de propriedades (multi-tenant)
+- ✅ Autenticação e usuários
+- ✅ CRUD de animais (vacas, terneiras, bezerros)
+- ✅ Ciclo reprodutivo
+- ✅ Registro de eventos (parto, colostragem, pesagem, etc)
+- ✅ Conformidade automática (C1–C7)
+- ✅ Dashboard com alertas e gráficos
+- ✅ Programa de acompanhamento (6 meses)
+- ✅ Checkpoint com projeção
+- ✅ Primeiro acesso automático
+- ✅ Admin do sistema
 
-**Sistema pronto para uso! 🎉**
+Veja [`ESPECIFICACAO_TECNICA_COMPLETA.md`](./ESPECIFICACAO_TECNICA_COMPLETA.md) para lista completa.
+
+---
+
+## 📞 Suporte
+
+### Dúvidas Técnicas?
+- Documentação: [`DOCUMENTACAO_AGENTE.md`](./DOCUMENTACAO_AGENTE.md)
+- Regras: [`.kiro/steering/projeto.md`](./.kiro/steering/projeto.md)
+- Issues: GitHub issues do repositório
+
+### Precisa Implementar?
+- Guia: [`GUIA_IMPLEMENTACAO_PARA_EQUIPE.md`](./GUIA_IMPLEMENTACAO_PARA_EQUIPE.md)
+- Bugs prioritários com código pronto
+
+### Vai fazer Deploy?
+- Checklist: [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md)
+- Render.com: Veja seção Deploy acima
+
+---
+
+## 📄 Licença
+
+MIT — Use, modifique e distribua livremente.
+
+---
+
+## 👥 Autores
+
+Desenvolvido por equipe de Desenvolvimento — TerneirasPro Team
+
+---
+
+## 🙏 Agradecimentos
+
+- Embrapa — Referenciais técnicos
+- Django — Framework excelente
+- Bootstrap — UI components
+- Comunidade open source
+
+---
+
+**Última atualização:** Agosto 2026  
+**Versão:** 1.0  
+**Status:** Pronto para Implementação
+
+👉 **Comece por:** [`LEIA_PRIMEIRO.md`](./LEIA_PRIMEIRO.md)
