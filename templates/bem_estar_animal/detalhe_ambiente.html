@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Detalhes - Ambiente{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h4 class="mb-0"><i class="bi bi-house-fill me-2"></i>Avaliação de Ambiente</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-4">Terneira:</dt>
+            <dd class="col-sm-8">{{ ambiente.terneira.identificacao }}</dd>
+
+            <dt class="col-sm-4">Data:</dt>
+            <dd class="col-sm-8">{{ ambiente.data_avaliacao|date:"d/m/Y" }}</dd>
+
+            <dt class="col-sm-4">Local Parição:</dt>
+            <dd class="col-sm-8">{{ ambiente.get_local_paricao_display|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Tipo Alojamento:</dt>
+            <dd class="col-sm-8">{{ ambiente.get_tipo_alojamento_display|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Dimensão Baia:</dt>
+            <dd class="col-sm-8">{{ ambiente.dimensao_baia_m2|default:"-" }} m²</dd>
+
+            <dt class="col-sm-4">Profundidade Cama:</dt>
+            <dd class="col-sm-8">{{ ambiente.profundidade_cama_cm|default:"-" }} cm</dd>
+
+            <dt class="col-sm-4">Tipo Cama:</dt>
+            <dd class="col-sm-8">{{ ambiente.get_tipo_cama_display|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Observações:</dt>
+            <dd class="col-sm-8">{{ ambiente.observacoes|default:"-" }}</dd>
+          </dl>
+
+          <div class="mt-4">
+            <a href="{% url 'bem_estar_animal:lista_ambiente' %}" class="btn btn-secondary">
+              <i class="bi bi-arrow-left me-1"></i>Voltar
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

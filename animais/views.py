@@ -4,6 +4,7 @@ from django.db.models import Q
 from .models import Animal, Lote, MovimentacaoLote, CicloReprodutivo
 from .forms import AnimalForm, LoteForm, CicloReprodutivoForm
 from programas.models import ProgramaAcompanhamento
+from core.decorators import papel_minimo_required
 
 
 def _prop(request):
@@ -37,6 +38,7 @@ def lista_terneiras(request):
     })
 
 
+@papel_minimo_required('admin', 'tecnico', 'produtor')
 def nova_terneira(request):
     prop = _prop(request)
     if not prop:
@@ -155,6 +157,7 @@ def detalhe_terneira(request, pk):
     })
 
 
+@papel_minimo_required('admin', 'tecnico', 'produtor')
 def editar_terneira(request, pk):
     prop = _prop(request)
     terneira = get_object_or_404(Animal, pk=pk, propriedade=prop)
@@ -197,6 +200,7 @@ def lista_vacas(request):
     return render(request, 'animais/lista_vacas.html', {'vacas': qs, 'q': q})
 
 
+@papel_minimo_required('admin', 'tecnico', 'produtor')
 def nova_vaca(request):
     prop = _prop(request)
     if not prop:
@@ -241,6 +245,7 @@ def lista_lotes(request):
     return render(request, 'animais/lista_lotes.html', {'lotes': lotes})
 
 
+@papel_minimo_required('admin', 'tecnico', 'produtor')
 def novo_lote(request):
     prop = _prop(request)
     if request.method == 'POST':
@@ -276,6 +281,7 @@ def detalhe_lote(request, pk):
 
 # ─── CICLO REPRODUTIVO ────────────────────────────────────────────────────────
 
+@papel_minimo_required('admin', 'tecnico', 'produtor')
 def novo_ciclo(request, vaca_pk):
     prop = _prop(request)
     vaca = get_object_or_404(Animal, pk=vaca_pk, propriedade=prop)

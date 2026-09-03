@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block title %}Plano de Ação BEA{% endblock %}
+{% block nav_bea_planos %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="bi bi-clipboard-check me-2 text-success"></i>Plano de Ação</h4>
+    <p class="text-muted small mb-0">Ações de melhoria do bem-estar animal</p>
+  </div>
+  <a href="{% url 'bem_estar_animal:novo_plano_acao' %}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Nova Ação
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{# ── Resumo ── #}
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3 col-xl">
+    <a href="?" class="text-decoration-none">
+      <div class="card kpi-card p-3 text-center {% if not status_filtro %}border-success border-2{% endif %}">
+        <div class="kpi-value">{{ contagens.total }}</div>
+        <div class="kpi-label">Total</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-md-3 col-xl">
+    <a href="?status=pendente" class="text-decoration-none">
+      <div class="card kpi-card p-3 text-center {% if status_filtro == 'pendente' %}border-warning border-2{% endif %}">
+        <div class="kpi-value text-warning">{{ contagens.pendente }}</div>
+        <div class="kpi-label">Pendentes</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-md-3 col-xl">
+    <a href="?status=em_andamento" class="text-decoration-none">
+      <div class="card kpi-card p-3 text-center {% if status_filtro == 'em_andamento' %}border-primary border-2{% endif %}">
+        <div class="kpi-value text-primary">{{ contagens.em_andamento }}</div>
+        <div class="kpi-label">Em andamento</div>
+      </div>
+    </a>
+  </div>
+  <div class="col-6 col-md-3 col-xl">
+    <a href="?status=concluido" class="text-decoration-none">
+      <div class="card kpi-card p-3 text-center {% if status_filtro == 'concluido' %}border-success border-2{% endif %}">
+        <div class="kpi-value text-success">{{ contagens.concluido }}</div>
+        <div class="kpi-label">Concluídas</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+{# ── Lista de ações ── #}
+{% if acoes %}
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-4">Indicador / Domínio</th>
+          <th>Jornada</th>
+          <th class="text-center">Prioridade</th>
+          <th class="text-center">Prazo</th>
+          <th class="text-center">Status</th>
+          <th class="text-end pe-4">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acao in acoes %}
+        <tr>
+          <td class="ps-4">
+            <div class="fw-semibold small">{{ acao.indicador }}</div>
+            <div class="text-muted" style="font-size:.75rem;">{{ acao.dominio }}</div>
+          </td>
+          <td class="small text-muted">{{ acao.jornada.nome|truncatechars:35 }}</td>
+          <td class="text-center">
+            {% if acao.prioridade == 'critica' %}
+              <span class="badge text-bg-danger">Crítica</span>
+            {% elif acao.prioridade == 'alta' %}
+              <span class="badge text-bg-warning text-dark">Alta</span>
+            {% elif acao.prioridade == 'media' %}
+              <span class="badge text-bg-info text-dark">Média</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Baixa</span>
+            {% endif %}
+          </td>
+          <td class="text-center small">
+            {{ acao.prazo|date:"d/m/Y" }}
+            {% if acao.esta_atrasada %}
+              <span class="badge text-bg-danger ms-1" style="font-size:.6rem;">Atrasada</span>
+            {% elif acao.dias_ate_prazo is not None and acao.dias_ate_prazo <= 7 %}
+              <span class="badge text-bg-warning text-dark ms-1" style="font-size:.6rem;">{{ acao.dias_ate_prazo }}d</span>
+            {% endif %}
+          </td>
+          <td class="text-center">
+            {% if acao.status == 'pendente' %}
+              <span class="badge text-bg-secondary">Pendente</span>
+            {% elif acao.status == 'em_andamento' %}
+              <span class="badge text-bg-primary">Em andamento</span>
+            {% elif acao.status == 'concluido' %}
+              <span class="badge text-bg-success">Concluída</span>
+            {% elif acao.status == 'cancelado' %}
+              <span class="badge text-bg-danger">Cancelada</span>
+            {% endif %}
+          </td>
+          <td class="text-end pe-4">
+            <a href="{% url 'bem_estar_animal:detalhe_plano_acao' acao.pk %}"
+               class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-eye"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-clipboard fs-1 text-muted opacity-50"></i>
+    <p class="text-muted mt-3 mb-1">
+      {% if status_filtro %}Nenhuma ação com status "{{ status_filtro }}".
+      {% else %}Nenhuma ação cadastrada no plano de ação.{% endif %}
+    </p>
+    <a href="{% url 'bem_estar_animal:novo_plano_acao' %}" class="btn btn-success mt-2">
+      <i class="bi bi-plus-lg me-1"></i>Criar primeira ação
+    </a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

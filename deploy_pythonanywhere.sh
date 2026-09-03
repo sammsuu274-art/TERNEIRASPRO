@@ -31,7 +31,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configurações
-PROJECT_DIR="$HOME/TerneirasPro"
+PROJECT_DIR="$HOME/TERNEIRAS"
 VENV_DIR="$HOME/venv"
 PYTHON_VERSION="3.12"
 
@@ -165,6 +165,10 @@ echo "3. Configurar Static Files:"
 echo "   • Ir para: Web → Web app → Static files"
 echo "   • URL: /static/"
 echo "   • Directory: $PROJECT_DIR/staticfiles"
+echo ""
+echo "4. Configurar Source code:"
+echo "   • Ir para: Web → Web app → Code"
+echo "   • Source code: $PROJECT_DIR"
 echo ""
 echo "4. Recarregar aplicação:"
 echo "   • No painel: Web → Web app → Reload"

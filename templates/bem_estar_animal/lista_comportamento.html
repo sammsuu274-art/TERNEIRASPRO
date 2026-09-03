@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Avaliações de Comportamento{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="fw-bold text-info mb-0">
+      <i class="bi bi-emoji-smile-fill me-2"></i>Avaliações de Comportamento
+    </h2>
+    <a href="{% url 'bem_estar_animal:dashboard' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Voltar
+    </a>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+      {% if comportamento_list %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th>Data</th>
+              <th>Terneira</th>
+              <th>Estímulo 6h</th>
+              <th>Idade Mochação</th>
+              <th class="text-end">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for comportamento in comportamento_list %}
+            <tr>
+              <td>{{ comportamento.data_avaliacao|date:"d/m/Y" }}</td>
+              <td>{{ comportamento.terneira.identificacao }}</td>
+              <td>
+                {% if comportamento.estimulo_6h %}
+                  <span class="badge bg-success">Sim</span>
+                {% elif comportamento.estimulo_6h is False %}
+                  <span class="badge bg-danger">Não</span>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                {% if comportamento.mocacao_idade_semanas %}
+                  {{ comportamento.mocacao_idade_semanas }} sem
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'bem_estar_animal:detalhe_comportamento' comportamento.pk %}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-inbox fs-1 text-muted"></i>
+        <p class="text-muted mt-2">Nenhuma avaliação de comportamento registrada</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

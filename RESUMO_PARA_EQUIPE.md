@@ -90,9 +90,11 @@ GUIA_IMPLEMENTACAO_PARA_EQUIPE.md         👈 PARA DESENVOLVEDORES
 ├─ Deploy no Render.com
 └─ Checklist final
 
-ESPECIFICACAO_TECNICA_COMPLETA.md         👈 REFERÊNCIA TÉCNICA
+DOCUMENTACAO_AGENTE.md              👈 REFERÊNCIA TÉCNICA COMPLETA (FONTE OFICIAL)
 ├─ Stack: Python 3.12 + Django 4.2.16
 ├─ Arquitetura e modelos
+├─ 47 funcionalidades
+└─ Problemas conhecidos e decisões pendentes
 ├─ 47 funcionalidades detalhadas
 ├─ Decisões de design
 └─ 10 decisões pendentes
@@ -152,7 +154,7 @@ python manage.py runserver
 ```
 1. LEIA_PRIMEIRO.md              (5 min)
 2. GUIA_IMPLEMENTACAO...md       (20 min)
-3. ESPECIFICACAO_TECNICA...md    (30 min — conforme necessário)
+3. DOCUMENTACAO_AGENTE.md        (60 min — especificação técnica completa)
 ```
 
 ### 4️⃣ Corrigir Bugs (2h 40 min)

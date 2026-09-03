@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}Jornadas ProCampo{% endblock %}
+{% block nav_bea_jornadas %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="bi bi-map me-2 text-success"></i>Jornadas ProCampo</h4>
+    <p class="text-muted small mb-0">Acompanhamento de bem-estar animal por propriedade</p>
+  </div>
+  {% if request.user.perfis.first.papel in "tecnico,admin" %}
+  <a href="{% url 'bem_estar_animal:nova_jornada' %}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Nova Jornada
+  </a>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% if not jornadas %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-map fs-1 text-muted opacity-50"></i>
+    <p class="text-muted mt-3 mb-1">Nenhuma jornada cadastrada para esta propriedade.</p>
+    <p class="text-muted small">Jornadas ProCampo acompanham o bem-estar animal ao longo de 6 meses.</p>
+  </div>
+</div>
+{% else %}
+
+<div class="row g-3">
+  {% for jornada in jornadas %}
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4">
+
+        {# ── Cabeçalho da jornada ── #}
+        <div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-3">
+          <div>
+            <h5 class="fw-bold mb-1">
+              <a href="{% url 'bem_estar_animal:detalhe_jornada' jornada.pk %}" class="text-decoration-none text-dark">
+                {{ jornada.nome }}
+              </a>
+            </h5>
+            <div class="text-muted small d-flex flex-wrap gap-3">
+              <span><i class="bi bi-house-door me-1"></i>{{ jornada.propriedade.nome }}</span>
+              <span><i class="bi bi-person me-1"></i>{{ jornada.produtor.get_full_name|default:jornada.produtor.username }}</span>
+              <span><i class="bi bi-calendar3 me-1"></i>Início: {{ jornada.data_inicio|date:"d/m/Y" }}</span>
+              <span><i class="bi bi-calendar-check me-1"></i>Previsão: {{ jornada.data_prevista_conclusao|date:"d/m/Y" }}</span>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            {# Badge de status #}
+            {% if jornada.status == 'em_andamento' %}
+              <span class="badge text-bg-success px-3 py-2">Em andamento</span>
+            {% elif jornada.status == 'planejamento' %}
+              <span class="badge text-bg-info px-3 py-2">Planejamento</span>
+            {% elif jornada.status == 'concluida' %}
+              <span class="badge text-bg-secondary px-3 py-2">Concluída</span>
+            {% elif jornada.status == 'cancelada' %}
+              <span class="badge text-bg-danger px-3 py-2">Cancelada</span>
+            {% endif %}
+            <a href="{% url 'bem_estar_animal:detalhe_jornada' jornada.pk %}" class="btn btn-sm btn-outline-success">
+              Ver detalhes
+            </a>
+          </div>
+        </div>
+
+        {# ── Métricas rápidas ── #}
+        <div class="row g-3">
+
+          {# Visitas #}
+          <div class="col-6 col-md-3">
+            <div class="bg-light rounded p-3 text-center">
+              <div class="fw-bold fs-4 {% if jornada.total_visitas >= jornada.minimo_visitas %}text-success{% else %}text-warning{% endif %}">
+                {{ jornada.total_visitas }}/{{ jornada.minimo_visitas }}
+              </div>
+              <div class="text-muted small">Visitas realizadas</div>
+              {% if jornada.visitas_restantes > 0 %}
+              <div class="text-warning" style="font-size:0.72rem;">
+                {{ jornada.visitas_restantes }} restante{{ jornada.visitas_restantes|pluralize }}
+              </div>
+              {% else %}
+              <div class="text-success" style="font-size:0.72rem;">Mínimo atingido</div>
+              {% endif %}
+            </div>
+          </div>
+
+          {# Ações abertas #}
+          <div class="col-6 col-md-3">
+            <div class="bg-light rounded p-3 text-center">
+              <div class="fw-bold fs-4 {% if jornada.acoes_pendentes > 0 %}text-warning{% else %}text-success{% endif %}">
+                {{ jornada.acoes_pendentes }}
+              </div>
+              <div class="text-muted small">Ações abertas</div>
+            </div>
+          </div>
+
+          {# Ações concluídas #}
+          <div class="col-6 col-md-3">
+            <div class="bg-light rounded p-3 text-center">
+              <div class="fw-bold fs-4 text-success">{{ jornada.acoes_concluidas }}</div>
+              <div class="text-muted small">Ações concluídas</div>
+            </div>
+          </div>
+
+          {# Baseline #}
+          <div class="col-6 col-md-3">
+            <div class="bg-light rounded p-3 text-center">
+              {% if jornada.baseline_realizado %}
+                <div class="fw-bold fs-4 text-success"><i class="bi bi-check-circle-fill"></i></div>
+                <div class="text-muted small">Baseline realizado</div>
+              {% else %}
+                <div class="fw-bold fs-4 text-muted"><i class="bi bi-circle"></i></div>
+                <div class="text-muted small">Baseline pendente</div>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+
+        {# ── Barra de progresso ── #}
+        {% if jornada.data_inicio and jornada.data_prevista_conclusao %}
+        <div class="mt-3">
+          <div class="d-flex justify-content-between small text-muted mb-1">
+            <span>Progresso da jornada</span>
+            <span>{{ jornada.duracao_dias }} dias</span>
+          </div>
+          <div class="progress" style="height: 6px;">
+            {% with total_dias=jornada.data_prevista_conclusao|timeuntil:jornada.data_inicio %}
+            <div class="progress-bar bg-success"
+                 role="progressbar"
+                 style="width: {{ jornada.duracao_dias|divisibleby:1|default:0 }}%"
+                 aria-valuenow="{{ jornada.duracao_dias }}"
+                 aria-valuemin="0"
+                 aria-valuemax="180">
+            </div>
+            {% endwith %}
+          </div>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endif %}
+{% endblock %}

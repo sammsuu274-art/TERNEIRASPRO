@@ -1,5 +1,20 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
+
+# Importar regras BEA centralizadas
+from bem_estar_animal.regras_bea import (
+    classificar_brix_colostro,
+    avaliar_volume_primeira_alimentacao,
+    avaliar_volume_segunda_alimentacao,
+    avaliar_desaleitamento_gradual,
+    avaliar_consumo_concentrado_desmame,
+    classificar_brix_serico,
+    avaliar_temperatura_retal,
+    classificar_escore_fezes,
+    classificar_infeccao_umbilical,
+    avaliar_volume_diario_aleitamento,
+)
 
 
 METODO_FORNECIMENTO_CHOICES = [
@@ -40,6 +55,18 @@ METODO_PESAGEM_CHOICES = [
     ('balanca_mecanica', 'Balança mecânica'),
     ('fita_toracica', 'Fita torácica (estimativa)'),
     ('estimativa_visual', 'Estimativa visual'),
+]
+
+# ======== CHOICES PARA EXTENSÕES BEA - FASE 3 ========
+METODO_DESCONGELAMENTO_CHOICES = [
+    ('banho_maria', 'Banho-maria'),
+    ('ambiente', 'Temperatura ambiente'),
+]
+
+RESULTADO_TIP_CHOICES = [
+    ('excelente', 'Excelente'),
+    ('adequado', 'Adequado'),
+    ('falha', 'Falha'),
 ]
 
 
@@ -161,6 +188,22 @@ class Colostragem(models.Model):
         null=True, blank=True,
     )
     ingestao_confirmada = models.BooleanField('Ingestão confirmada?', default=True)
+    
+    # CAMPOS PROCAMPO - DOMÍNIO 4 (NUTRIÇÃO)
+    metodo_descongelamento = models.CharField(
+        'Método de descongelamento', max_length=20,
+        choices=METODO_DESCONGELAMENTO_CHOICES, blank=True,
+        help_text='Como o colostro congelado foi descongelado'
+    )
+    volume_segunda_mamada_ml = models.PositiveIntegerField(
+        'Volume segunda mamada (ml)', null=True, blank=True,
+        help_text='Volume fornecido na segunda mamada (meta: +5% peso até 12h)'
+    )
+    leite_transicao = models.BooleanField(
+        'Leite de transição oferecido?', null=True, blank=True,
+        help_text='Se houve fornecimento de leite de transição após colostro'
+    )
+    
     responsavel = models.ForeignKey(
         'accounts.Usuario', on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='Responsável',
@@ -176,6 +219,31 @@ class Colostragem(models.Model):
     def __str__(self):
         return f'Colostragem {self.terneira} em {self.data_hora}'
 
+    def clean(self):
+        super().clean()
+        if self.volume_ml is not None:
+            if self.volume_ml < 50:
+                raise ValidationError({
+                    'volume_ml': 'Volume mínimo de colostragem é 50 ml.'
+                })
+            if self.volume_ml > 10000:
+                raise ValidationError({
+                    'volume_ml': 'Volume máximo de colostragem é 10.000 ml (10 litros).'
+                })
+        if self.brix is not None:
+            if self.brix < 0:
+                raise ValidationError({
+                    'brix': 'Brix não pode ser negativo.'
+                })
+            if self.brix > 32:
+                raise ValidationError({
+                    'brix': 'Brix máximo é 32% (limite físico do refratômetro padrão).'
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     @property
     def tempo_apos_nascimento_horas(self):
         """Calcula horas entre o nascimento e este fornecimento."""
@@ -189,9 +257,59 @@ class Colostragem(models.Model):
             pass
         return None
 
+    @property
+    def classificacao_brix(self):
+        """Classificação automática do Brix do colostro."""
+        return classificar_brix_colostro(float(self.brix) if self.brix else None)
+
+    @property
+    def classificacao_volume_primeira_mamada(self):
+        """Classificação do volume se for a primeira mamada."""
+        # Buscar peso: nascimento ou primeira pesagem
+        peso = None
+        if hasattr(self.terneira, 'parto_origem') and self.terneira.parto_origem:
+            peso = self.terneira.parto_origem.peso_nascimento
+        if not peso:
+            primeira_pesagem = self.terneira.pesagens.order_by('data').first()
+            if primeira_pesagem:
+                peso = primeira_pesagem.peso_kg
+        
+        return avaliar_volume_primeira_alimentacao(
+            self.volume_ml,
+            float(peso) if peso else None
+        )
+
+    @property
+    def classificacao_volume_segunda_mamada(self):
+        """Classificação do volume da segunda mamada (se informado)."""
+        peso = None
+        if hasattr(self.terneira, 'parto_origem') and self.terneira.parto_origem:
+            peso = self.terneira.parto_origem.peso_nascimento
+        if not peso:
+            primeira_pesagem = self.terneira.pesagens.order_by('data').first()
+            if primeira_pesagem:
+                peso = primeira_pesagem.peso_kg
+        
+        return avaliar_volume_segunda_alimentacao(
+            self.volume_segunda_mamada_ml,
+            float(peso) if peso else None
+        )
+
 
 class CuraUmbigo(models.Model):
     """Registro de aplicação de produto no umbigo."""
+    
+    ESCORE_INFECCAO_CHOICES = [
+        (0, '0 — Normal/sem infecção'),
+        (1, '1 — Infecção leve'),
+        (2, '2 — Infecção moderada/grave'),
+    ]
+    
+    DIAS_QUEDA_CHOICES = [
+        ('3-4', '3-4 dias'),
+        ('5-7', '5-7 dias'),
+        ('>8', 'Mais de 8 dias'),
+    ]
 
     terneira = models.ForeignKey(
         'animais.Animal', on_delete=models.CASCADE,
@@ -204,6 +322,7 @@ class CuraUmbigo(models.Model):
         'Método', max_length=50, blank=True,
         help_text='Ex: imersão, aspersão, pincel',
     )
+    
     # Avaliação do umbigo neste momento
     coto_seco = models.BooleanField('Coto seco?', null=True, blank=True)
     inchaço = models.BooleanField('Inchaço?', default=False)
@@ -213,12 +332,53 @@ class CuraUmbigo(models.Model):
     dor_palpacao = models.BooleanField('Dor à palpação?', default=False)
     suspeita_onfalite = models.BooleanField('Suspeita de onfalite?', default=False)
     foto = models.ImageField('Foto', upload_to='umbigo/', null=True, blank=True)
+    
+    # CAMPOS PROCAMPO - DOMÍNIO 1 (SAÚDE)
+    escore_infeccao = models.IntegerField(
+        'Escore de infecção umbilical', choices=ESCORE_INFECCAO_CHOICES,
+        null=True, blank=True,
+        help_text='0=Normal, 1=Infecção leve, 2=Moderada/Grave'
+    )
+    dias_queda_cordao = models.CharField(
+        'Dias para queda do cordão', max_length=10,
+        choices=DIAS_QUEDA_CHOICES, blank=True, null=True,
+        help_text='Tempo desde nascimento até queda completa do cordão'
+    )
+    antibiotico_usado = models.BooleanField(
+        'Antibiótico sistêmico usado?', null=True, blank=True,
+        help_text='Se houve necessidade de antibiótico sistêmico por onfalite'
+    )
+    uso_preventivo = models.BooleanField(
+        'Uso preventivo de injetáveis?', null=True, blank=True,
+        help_text='Se houve aplicação preventiva de medicação injetável'
+    )
+    
     responsavel = models.ForeignKey(
         'accounts.Usuario', on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='Responsável',
     )
     observacoes = models.TextField('Observações', blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
+
+    # ======== CAMPOS BEA OPCIONAIS - FASE 2 - MANTER POR COMPATIBILIDADE ========
+    numero_infeccoes = models.PositiveSmallIntegerField(
+        'Número de infecções umbilicais', null=True, blank=True, default=0,
+        help_text='Contador de episódios de onfalite neste animal'
+    )
+    
+    # ======== CAMPOS EXTRAS (NÃO ESTAVAM NA ESPECIFICAÇÃO APROVADA) ========
+    cor_umbigo = models.CharField(
+        'Cor do umbigo - EXTRA', max_length=20, null=True, blank=True,
+        help_text='CAMPO EXTRA: Ex: rosa, vermelho, roxo, preto'
+    )
+    espessura_mm = models.PositiveSmallIntegerField(
+        'Espessura do cordão (mm) - EXTRA', null=True, blank=True,
+        help_text='CAMPO EXTRA: Medida na base do cordão umbilical'
+    )
+    comprimento_mm = models.PositiveSmallIntegerField(
+        'Comprimento do coto (mm) - EXTRA', null=True, blank=True,
+        help_text='CAMPO EXTRA: Medida do coto que ainda não caiu'
+    )
 
     class Meta:
         verbose_name = 'Cura de umbigo'
@@ -227,6 +387,70 @@ class CuraUmbigo(models.Model):
 
     def __str__(self):
         return f'Umbigo {self.terneira} em {self.data_hora}'
+
+    def clean(self):
+        super().clean()
+
+        # Escore de infecção deve estar dentro do range (0, 1 ou 2)
+        if self.escore_infeccao is not None and self.escore_infeccao not in (0, 1, 2):
+            raise ValidationError({
+                'escore_infeccao': 'Escore de infecção deve ser 0, 1 ou 2.'
+            })
+
+        # Verificar intervalo mínimo de 6h entre aplicações no mesmo dia/terneira
+        # A cartilha determina 2 aplicações no 1º dia com intervalo mínimo de 6h
+        if self.terneira_id and self.data_hora:
+            # Buscar curas anteriores da mesma terneira (exceto o próprio registro em edição)
+            qs = CuraUmbigo.objects.filter(terneira_id=self.terneira_id)
+            if self.pk:
+                qs = qs.exclude(pk=self.pk)
+
+            for cura_anterior in qs:
+                if cura_anterior.data_hora:
+                    delta = abs((self.data_hora - cura_anterior.data_hora).total_seconds())
+                    intervalo_horas = delta / 3600
+                    # Apenas avisa se o intervalo for menor que 6h (não bloqueia — pode ser
+                    # uma terceira aplicação em dia diferente, ou correção legítima)
+                    if intervalo_horas < 6:
+                        raise ValidationError(
+                            f'Intervalo mínimo entre aplicações de cura de umbigo é de 6 horas. '
+                            f'Aplicação anterior registrada em {cura_anterior.data_hora.strftime("%d/%m/%Y %H:%M")} '
+                            f'({intervalo_horas:.1f}h de diferença).'
+                        )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    @property
+    def intervalo_desde_ultima_cura_horas(self):
+        """Retorna horas desde a cura imediatamente anterior da mesma terneira."""
+        if not self.pk or not self.data_hora:
+            return None
+        anterior = (
+            CuraUmbigo.objects
+            .filter(terneira_id=self.terneira_id, data_hora__lt=self.data_hora)
+            .exclude(pk=self.pk)
+            .order_by('-data_hora')
+            .first()
+        )
+        if anterior and anterior.data_hora:
+            delta = (self.data_hora - anterior.data_hora).total_seconds()
+            return round(delta / 3600, 2)
+        return None
+
+    @property
+    def intervalo_valido(self):
+        """True se o intervalo desde a última cura for >= 6h (ou se for a primeira cura)."""
+        horas = self.intervalo_desde_ultima_cura_horas
+        if horas is None:
+            return None  # Primeira cura ou dado ausente — não classificável
+        return horas >= 6
+
+    @property
+    def classificacao_infeccao(self):
+        """Classificação automática do escore de infecção umbilical."""
+        return classificar_infeccao_umbilical(self.escore_infeccao)
 
 
 class Pesagem(models.Model):
@@ -267,6 +491,31 @@ class Pesagem(models.Model):
     def __str__(self):
         return f'{self.animal} — {self.peso_kg}kg em {self.data}'
 
+    def clean(self):
+        super().clean()
+        if self.peso_kg is not None:
+            if self.peso_kg < 5:
+                raise ValidationError({
+                    'peso_kg': 'Peso mínimo é 5 kg.'
+                })
+            if self.peso_kg > 550:
+                raise ValidationError({
+                    'peso_kg': 'Peso máximo é 550 kg (escopo: terneira/novilha até primeira cobertura — Pardo Suíço ~455 kg + margem).'
+                })
+        if self.ecc is not None:
+            if self.ecc < 1:
+                raise ValidationError({
+                    'ecc': 'ECC mínimo é 1,0 (escala 1,0 a 5,0).'
+                })
+            if self.ecc > 5:
+                raise ValidationError({
+                    'ecc': 'ECC máximo é 5,0 (escala 1,0 a 5,0).'
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     @property
     def idade_na_pesagem(self):
         if self.animal.data_nascimento:
@@ -276,6 +525,26 @@ class Pesagem(models.Model):
 
 class OcorrenciaSanitaria(models.Model):
     """Problema de saúde com início, tratamento e desfecho."""
+    
+    ESCORE_FEZES_CHOICES = [
+        (0, '0 — Normais/firmes'),
+        (1, '1 — Ligeiramente amolecidas'),
+        (2, '2 — Amolecidas/pastosas'),
+        (3, '3 — Líquidas/aquosas'),
+    ]
+    
+    ESCORE_RESPIRATORIO_CHOICES = [
+        (0, '0 — Normal'),
+        (1, '1 — Alteração leve'),
+        (2, '2 — Alteração moderada'),
+        (3, '3 — Alteração grave'),
+    ]
+    
+    FAIXA_ETARIA_CHOICES = [
+        ('0-30d', '0-30 dias'),
+        ('31-60d', '31-60 dias'),
+        ('>60d', 'Acima de 60 dias'),
+    ]
 
     animal = models.ForeignKey(
         'animais.Animal', on_delete=models.CASCADE,
@@ -283,10 +552,34 @@ class OcorrenciaSanitaria(models.Model):
     )
     tipo = models.CharField('Tipo', max_length=30, choices=TIPO_OCORRENCIA_CHOICES)
     data_inicio = models.DateField('Data de início')
+    
+    # CAMPOS PROCAMPO - DOMÍNIO 1 (SAÚDE)
+    brix_serico_tip = models.DecimalField(
+        'Brix sérico/TIP (%)', max_digits=4, decimal_places=1,
+        null=True, blank=True,
+        help_text='Medição do Brix no sangue (≥9,4%=excelente, <8,1%=falha)'
+    )
+    escore_fezes = models.IntegerField(
+        'Escore de fezes', choices=ESCORE_FEZES_CHOICES,
+        null=True, blank=True,
+        help_text='0-1=Normal, 2-3=Diarreia'
+    )
     temperatura_retal = models.DecimalField(
         'Temperatura retal (°C)', max_digits=4, decimal_places=1,
         null=True, blank=True,
+        help_text='Referência doença respiratória: ≥39,4°C'
     )
+    escore_respiratorio = models.IntegerField(
+        'Escore respiratório', choices=ESCORE_RESPIRATORIO_CHOICES,
+        null=True, blank=True,
+        help_text='0=Normal, 1-3=Alterado'
+    )
+    faixa_etaria_auto = models.CharField(
+        'Faixa etária (automática)', max_length=10,
+        choices=FAIXA_ETARIA_CHOICES, blank=True,
+        help_text='Calculada automaticamente pela idade no registro'
+    )
+    
     sinais_clinicos = models.TextField('Sinais clínicos', blank=True)
     diagnostico = models.CharField('Diagnóstico', max_length=200, blank=True)
     conduta = models.TextField('Conduta adotada', blank=True)
@@ -309,6 +602,22 @@ class OcorrenciaSanitaria(models.Model):
     observacoes = models.TextField('Observações', blank=True)
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    # ======== CAMPOS BEA OPCIONAIS - FASE 2 - MANTER POR COMPATIBILIDADE ========
+    ultrassom_7dias = models.BooleanField(
+        'Ultrassom realizado nos primeiros 7 dias?', null=True, blank=True,
+        help_text='Para avaliação de transferência de imunidade passiva'
+    )
+    
+    # ======== CAMPOS EXTRAS - MANTER POR COMPATIBILIDADE ========
+    desidratacao_grau = models.IntegerField(
+        'Grau de desidratação (%) - EXTRA', null=True, blank=True,
+        help_text='CAMPO EXTRA: 0-15%: 0=Sem desidratação, 5-8%=Leve, 8-12%=Moderada, >12%=Severa'
+    )
+    apetite_score = models.IntegerField(
+        'Score de apetite (0-2) - EXTRA', null=True, blank=True,
+        help_text='CAMPO EXTRA: 0=Normal/Voraz, 1=Reduzido, 2=Ausente'
+    )
+
     class Meta:
         verbose_name = 'Ocorrência sanitária'
         verbose_name_plural = 'Ocorrências sanitárias'
@@ -316,6 +625,45 @@ class OcorrenciaSanitaria(models.Model):
 
     def __str__(self):
         return f'{self.animal} — {self.get_tipo_display()} em {self.data_inicio}'
+    
+    def clean(self):
+        super().clean()
+
+        # Auto-preencher faixa etária baseada na idade do animal
+        if self.animal and self.animal.data_nascimento and self.data_inicio:
+            idade_dias = (self.data_inicio - self.animal.data_nascimento).days
+            if idade_dias <= 30:
+                self.faixa_etaria_auto = '0-30d'
+            elif idade_dias <= 60:
+                self.faixa_etaria_auto = '31-60d'
+            else:
+                self.faixa_etaria_auto = '>60d'
+
+        # Temperatura retal: intervalo fisiológico bovino
+        if self.temperatura_retal is not None:
+            if self.temperatura_retal < 35.0:
+                raise ValidationError({
+                    'temperatura_retal': 'Temperatura retal não pode ser inferior a 35,0°C.'
+                })
+            if self.temperatura_retal > 43.0:
+                raise ValidationError({
+                    'temperatura_retal': 'Temperatura retal não pode ser superior a 43,0°C.'
+                })
+
+        # Brix sérico: intervalo fisicamente possível
+        if self.brix_serico_tip is not None:
+            if self.brix_serico_tip < 0:
+                raise ValidationError({
+                    'brix_serico_tip': 'Brix sérico não pode ser negativo.'
+                })
+            if self.brix_serico_tip > 30:
+                raise ValidationError({
+                    'brix_serico_tip': 'Brix sérico não pode ser superior a 30%.'
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Executa clean() antes de salvar
+        super().save(*args, **kwargs)
 
     @property
     def duracao_dias(self):
@@ -326,6 +674,21 @@ class OcorrenciaSanitaria(models.Model):
     @property
     def ativa(self):
         return self.data_fim is None
+
+    @property
+    def classificacao_brix_serico(self):
+        """Classificação automática do Brix sérico (TIP)."""
+        return classificar_brix_serico(float(self.brix_serico_tip) if self.brix_serico_tip else None)
+
+    @property
+    def avaliacao_temperatura(self):
+        """Avaliação da temperatura retal como indicador respiratório."""
+        return avaliar_temperatura_retal(float(self.temperatura_retal) if self.temperatura_retal else None)
+
+    @property
+    def classificacao_fezes(self):
+        """Classificação do escore de fezes / diarreia."""
+        return classificar_escore_fezes(self.escore_fezes)
 
 
 class Vacinacao(models.Model):
@@ -362,13 +725,26 @@ class Vacinacao(models.Model):
 
 
 class ProtocoloAlimentar(models.Model):
-    """Regime alimentar vigente para a terneira em determinado período."""
+    """Regime alimentar vigente para a terneira em determinado período - EXPANDIDO PROCAMPO."""
 
     TIPO_ALIMENTO_CHOICES = [
         ('leite_integral', 'Leite integral'),
         ('sucedaneo', 'Sucedâneo'),
         ('misto', 'Misto (leite + sucedâneo)'),
         ('solido', 'Sólido exclusivo (pós-desaleitamento)'),
+    ]
+    
+    FREQUENCIA_CHOICES = [
+        ('1x', '1x ao dia'),
+        ('2x', '2x ao dia'),
+        ('3x', '3x ao dia'),
+        ('a_vontade', 'À vontade'),
+    ]
+    
+    CORRECAO_SOLIDOS_CHOICES = [
+        ('sim', 'Sim'),
+        ('nao', 'Não'),
+        ('nao_aplicavel', 'Não aplicável'),
     ]
 
     terneira = models.ForeignKey(
@@ -378,18 +754,56 @@ class ProtocoloAlimentar(models.Model):
     data_inicio = models.DateField('Data de início')
     data_fim = models.DateField('Data de fim', null=True, blank=True)
     tipo_alimento = models.CharField('Tipo de alimento', max_length=30, choices=TIPO_ALIMENTO_CHOICES)
-    volume_dia_litros = models.DecimalField(
-        'Volume diário (L)', max_digits=4, decimal_places=1,
+    
+    # CAMPOS PROCAMPO - DOMÍNIO 4 (NUTRIÇÃO) - EXPANDIDOS
+    # Volume e frequência por faixa etária
+    volume_dia_0_30_litros = models.DecimalField(
+        'Volume diário 0-30 dias (L)', max_digits=4, decimal_places=1,
         null=True, blank=True,
+        help_text='Meta grande porte: ≥7L/dia'
     )
-    fornecimentos_dia = models.PositiveSmallIntegerField('Fornecimentos/dia', default=2)
+    volume_dia_31_60_litros = models.DecimalField(
+        'Volume diário 31-60 dias (L)', max_digits=4, decimal_places=1,
+        null=True, blank=True
+    )
+    volume_dia_acima_60_litros = models.DecimalField(
+        'Volume diário acima 60 dias (L)', max_digits=4, decimal_places=1,
+        null=True, blank=True
+    )
+    
+    frequencia_mamadas = models.CharField(
+        'Frequência de mamadas', max_length=20,
+        choices=FREQUENCIA_CHOICES, blank=True
+    )
+    
+    tipo_leite_detalhado = models.CharField(
+        'Tipo de leite detalhado', max_length=100, blank=True,
+        help_text='Ex: Leite integral pasteurizado, sucedâneo 22% PB'
+    )
+    
+    correcao_solidos = models.CharField(
+        'Correção de sólidos', max_length=20,
+        choices=CORRECAO_SOLIDOS_CHOICES, blank=True,
+        help_text='Se há adição de solúveis para elevar sólidos totais'
+    )
+    
+    # Concentrado
     concentrado = models.CharField('Concentrado', max_length=200, blank=True)
     concentrado_proteina = models.DecimalField(
         'PB do concentrado (%)', max_digits=4, decimal_places=1,
         null=True, blank=True,
     )
+    consumo_concentrado_estimado_kg = models.DecimalField(
+        'Consumo estimado concentrado (kg/dia)', max_digits=5, decimal_places=3,
+        null=True, blank=True
+    )
+    
+    # Volumoso e água
     feno = models.BooleanField('Oferece feno?', default=False)
+    tipo_volumoso = models.CharField('Tipo de volumoso', max_length=100, blank=True,
+                                      help_text='Ex: Feno coast-cross, silagem milho')
     agua_livre = models.BooleanField('Água à vontade?', default=True)
+    
     protocolo = models.ForeignKey(
         'config_tecnica.Protocolo', on_delete=models.SET_NULL,
         null=True, blank=True, verbose_name='Protocolo base',
@@ -408,6 +822,15 @@ class ProtocoloAlimentar(models.Model):
 
     def __str__(self):
         return f'{self.terneira} — {self.get_tipo_alimento_display()} a partir de {self.data_inicio}'
+
+    @property
+    def classificacao_volume_0_30d(self):
+        """Classificação do volume diário para terneiras 0-30 dias."""
+        raca = self.terneira.raca if hasattr(self, 'terneira') else None
+        return avaliar_volume_diario_aleitamento(
+            float(self.volume_dia_0_30_litros) if self.volume_dia_0_30_litros else None,
+            raca
+        )
 
 
 class RegistroAlimentacaoDiario(models.Model):
@@ -465,6 +888,18 @@ class Desaleitamento(models.Model):
     consumo_concentrado_adequado = models.BooleanField(
         'Consumo de concentrado adequado?', null=True, blank=True,
     )
+    
+    # CAMPOS PROCAMPO - DOMÍNIO 4 (NUTRIÇÃO)
+    consumo_concentrado_kg = models.DecimalField(
+        'Consumo concentrado exato (kg/dia)', max_digits=5, decimal_places=3,
+        null=True, blank=True,
+        help_text='Meta ao desmame: 1,2-1,5 kg/dia'
+    )
+    duracao_gradual_dias = models.PositiveSmallIntegerField(
+        'Duração desaleitamento gradual (dias)', null=True, blank=True,
+        help_text='Meta: ≥10 dias para desaleitamento gradual'
+    )
+    
     doenca_ativa = models.BooleanField('Doença ativa no momento?', default=False)
     responsavel = models.ForeignKey(
         'accounts.Usuario', on_delete=models.SET_NULL,
@@ -480,8 +915,108 @@ class Desaleitamento(models.Model):
     def __str__(self):
         return f'Desaleitamento de {self.terneira} em {self.data}'
 
+    def clean(self):
+        super().clean()
+        # Consumo concentrado: limites fisiológicos
+        if self.consumo_concentrado_kg is not None:
+            if self.consumo_concentrado_kg < 0:
+                raise ValidationError({
+                    'consumo_concentrado_kg': 'Consumo de concentrado não pode ser negativo.'
+                })
+            if self.consumo_concentrado_kg > 10:
+                raise ValidationError({
+                    'consumo_concentrado_kg': 'Consumo de concentrado não pode ultrapassar 10 kg/dia para terneiras.'
+                })
+        # Duração gradual: limite razoável
+        if self.duracao_gradual_dias is not None:
+            if self.duracao_gradual_dias > 90:
+                raise ValidationError({
+                    'duracao_gradual_dias': 'Duração do desaleitamento gradual não pode ultrapassar 90 dias.'
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     @property
     def idade_desaleitamento_dias(self):
         if self.terneira.data_nascimento:
             return (self.data - self.terneira.data_nascimento).days
         return None
+
+    @property
+    def classificacao_duracao_gradual(self):
+        """Classificação da duração do desaleitamento gradual."""
+        return avaliar_desaleitamento_gradual(self.duracao_gradual_dias, self.metodo)
+
+    @property
+    def classificacao_consumo_concentrado(self):
+        """Classificação do consumo de concentrado no desmame."""
+        return avaliar_consumo_concentrado_desmame(
+            float(self.consumo_concentrado_kg) if self.consumo_concentrado_kg else None
+        )
+
+
+# ======== EXTENSÕES BEA - FASE 3 ========
+
+class ColostragemBEA(models.Model):
+    """Extensão BEA para dados de bem-estar animal da colostragem."""
+    
+    colostragem_origem = models.OneToOneField(
+        Colostragem, on_delete=models.CASCADE,
+        related_name='extensao_bea', verbose_name='Colostragem'
+    )
+    horario_primeira_mamada = models.DateTimeField(
+        'Horário da primeira mamada', null=True, blank=True,
+        help_text='Registro do primeiro fornecimento de colostro'
+    )
+    horario_segunda_mamada = models.DateTimeField(
+        'Horário da segunda mamada', null=True, blank=True,
+        help_text='Registro do segundo fornecimento de colostro'
+    )
+    metodo_descongelamento = models.CharField(
+        'Método de descongelamento', max_length=20, 
+        choices=METODO_DESCONGELAMENTO_CHOICES, blank=True,
+        help_text='Como o colostro foi descongelado (se aplicável)'
+    )
+    leite_transicao = models.BooleanField(
+        'Leite de transição oferecido?', null=True, blank=True,
+        help_text='Se houve fornecimento de leite de transição'
+    )
+    
+    class Meta:
+        verbose_name = 'Extensão BEA - Colostragem'
+        verbose_name_plural = 'Extensões BEA - Colostragem'
+    
+    def __str__(self):
+        return f'BEA - {self.colostragem_origem}'
+
+
+class PesagemBEA(models.Model):
+    """Extensão BEA para dados de bem-estar animal da pesagem."""
+    
+    pesagem_origem = models.OneToOneField(
+        Pesagem, on_delete=models.CASCADE,
+        related_name='extensao_bea', verbose_name='Pesagem'
+    )
+    brix_serico = models.DecimalField(
+        'Brix sérico (%)', max_digits=4, decimal_places=1,
+        null=True, blank=True,
+        help_text='Medição do Brix no sangue para avaliação de imunidade'
+    )
+    data_coleta_sangue = models.DateField(
+        'Data da coleta de sangue', null=True, blank=True,
+        help_text='Data em que foi coletado o sangue para análise de Brix'
+    )
+    resultado_tip = models.CharField(
+        'Resultado TIP', max_length=20,
+        choices=RESULTADO_TIP_CHOICES, blank=True,
+        help_text='Resultado da avaliação de transferência de imunidade passiva'
+    )
+    
+    class Meta:
+        verbose_name = 'Extensão BEA - Pesagem'
+        verbose_name_plural = 'Extensões BEA - Pesagem'
+    
+    def __str__(self):
+        return f'BEA - {self.pesagem_origem}'

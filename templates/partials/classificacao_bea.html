@@ -1,0 +1,42 @@
+{#
+  Partial: classificacao_bea.html
+  Uso: {% include "partials/classificacao_bea.html" with resultado=objeto.classificacao_brix rotulo="Brix sérico" %}
+  Parâmetros:
+    resultado  — dict retornado por regras_bea.py  (classificacao, valor, referencia, justificativa)
+    rotulo     — nome legível do indicador (ex: "Brix sérico")
+    unidade    — unidade do valor (opcional, ex: "%", "°C", "m²")
+#}
+{% with cl=resultado.classificacao %}
+<div class="d-flex align-items-start gap-2">
+  <div class="flex-grow-1">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <span class="small fw-semibold text-muted">{{ rotulo }}</span>
+      {% if resultado.valor is not None %}
+        <span class="small text-dark">{{ resultado.valor }}{% if unidade %} {{ unidade }}{% endif %}</span>
+      {% endif %}
+      {% if cl == "EXCELENTE" %}
+        <span class="badge rounded-pill text-bg-success" title="{{ resultado.justificativa }}">Excelente</span>
+      {% elif cl == "ADEQUADO" %}
+        <span class="badge rounded-pill" style="background:#198754;color:#fff" title="{{ resultado.justificativa }}">Adequado</span>
+      {% elif cl == "MEDIO" %}
+        <span class="badge rounded-pill text-bg-info" title="{{ resultado.justificativa }}">Médio</span>
+      {% elif cl == "ATENCAO" %}
+        <span class="badge rounded-pill text-bg-warning text-dark" title="{{ resultado.justificativa }}">Atenção</span>
+      {% elif cl == "CRITICO" %}
+        <span class="badge rounded-pill text-bg-danger" title="{{ resultado.justificativa }}">Crítico</span>
+      {% elif cl == "DADOS_INSUFICIENTES" %}
+        <span class="badge rounded-pill text-bg-secondary" title="Dado não registrado">Não avaliado</span>
+      {% elif cl == "NAO_INFORMADO" %}
+        <span class="badge rounded-pill text-bg-secondary" title="Campo não preenchido">Não informado</span>
+      {% elif cl == "NAO_APLICAVEL" %}
+        <span class="badge rounded-pill" style="background:#6c757d;color:#fff" title="{{ resultado.justificativa }}">N/A</span>
+      {% else %}
+        <span class="badge rounded-pill text-bg-secondary">—</span>
+      {% endif %}
+    </div>
+    {% if resultado.referencia %}
+      <div class="text-muted" style="font-size:0.75rem;">Ref: {{ resultado.referencia }}</div>
+    {% endif %}
+  </div>
+</div>
+{% endwith %}

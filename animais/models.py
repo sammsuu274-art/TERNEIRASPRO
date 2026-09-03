@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
 
@@ -71,6 +72,24 @@ class Animal(models.Model):
 
     def __str__(self):
         return f'{self.identificacao} — {self.get_raca_display()} ({self.get_categoria_display()})'
+
+    def clean(self):
+        super().clean()
+        if self.data_nascimento is not None:
+            hoje = timezone.now().date()
+            if self.data_nascimento > hoje:
+                raise ValidationError({
+                    'data_nascimento': 'A data de nascimento não pode ser futura.'
+                })
+            limite_passado = hoje.replace(year=hoje.year - 30)
+            if self.data_nascimento < limite_passado:
+                raise ValidationError({
+                    'data_nascimento': 'Data de nascimento muito antiga (máximo 30 anos atrás).'
+                })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     @property
     def idade_dias(self):

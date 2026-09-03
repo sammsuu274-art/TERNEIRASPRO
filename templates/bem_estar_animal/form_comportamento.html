@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+          <h4 class="mb-0"><i class="bi bi-emoji-smile-fill me-2"></i>{{ titulo }}</h4>
+        </div>
+        <div class="card-body">
+          {% if terneira %}
+          <div class="alert alert-info">
+            <strong>Terneira:</strong> {{ terneira.identificacao }} - {{ terneira.raca }}
+          </div>
+          {% endif %}
+
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Data da Avaliação</label>
+                {{ form.data_avaliacao }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Estímulo 6h Pós-Nascimento</label>
+                {{ form.estimulo_6h_pos_nascimento }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Idade Mocação (semanas)</label>
+                {{ form.idade_mocacao_semanas }}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Observações</label>
+                {{ form.observacoes }}
+              </div>
+            </div>
+
+            {{ form.terneira.as_hidden }}
+
+            <div class="mt-4 d-flex gap-2">
+              <button type="submit" class="btn btn-info text-white">
+                <i class="bi bi-check-lg me-1"></i>Salvar
+              </button>
+              <a href="{% url 'bem_estar_animal:lista_comportamento' %}" class="btn btn-secondary">
+                <i class="bi bi-x-lg me-1"></i>Cancelar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

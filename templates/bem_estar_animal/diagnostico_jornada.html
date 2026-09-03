@@ -1,0 +1,581 @@
+{% extends 'base.html' %}
+{% block title %}Diagnóstico — {{ jornada.nome }}{% endblock %}
+{% block nav_bea_jornadas %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-1">
+        <li class="breadcrumb-item"><a href="{% url 'bem_estar_animal:lista_jornadas' %}" class="text-success">Jornadas</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'bem_estar_animal:detalhe_jornada' jornada.pk %}" class="text-success">{{ jornada.nome }}</a></li>
+        <li class="breadcrumb-item active">Diagnóstico</li>
+      </ol>
+    </nav>
+    <h4 class="fw-bold mb-0"><i class="bi bi-clipboard2-data me-2 text-success"></i>Diagnóstico — {{ jornada.nome }}</h4>
+    <p class="text-muted small mb-0">Dados reais da propriedade organizados por domínio ProCampo</p>
+  </div>
+  <a href="{% url 'bem_estar_animal:detalhe_jornada' jornada.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Voltar à jornada
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{# ══ DOMÍNIO 1 — SAÚDE ════════════════════════════════════════════════════ #}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-danger bg-opacity-10 border-0 py-3">
+    <h5 class="mb-0 fw-semibold"><i class="bi bi-heart-pulse text-danger me-2"></i>1. Saúde</h5>
+  </div>
+  <div class="card-body p-0">
+
+    {# 1.1 — Brix sérico (via Colostragem com Brix) #}
+    <div class="p-4 border-bottom">
+      <div class="form-section-title">Imunidade passiva — Brix sérico</div>
+      {% if colostragens_recentes %}
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Terneira</th>
+              <th>Data</th>
+              <th class="text-center">Brix colostro</th>
+              <th class="text-center">Classificação</th>
+              <th class="text-center">Referência</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for col in colostragens_recentes %}
+            <tr>
+              <td class="fw-semibold small">{{ col.terneira.identificacao }}</td>
+              <td class="small text-muted">{{ col.data_hora|date:"d/m/Y H:i" }}</td>
+              <td class="text-center">
+                <span class="fw-semibold">{{ col.brix }}%</span>
+              </td>
+              <td class="text-center">
+                {% with r=col.classificacao_brix %}
+                  {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                {% endwith %}
+              </td>
+              <td class="text-muted small">≥22% Excelente</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-muted small d-flex align-items-center gap-2 py-2">
+        <i class="bi bi-info-circle"></i>
+        Nenhuma colostragem com Brix registrada.
+        <a href="{% url 'animais:lista_terneiras' %}">Ver terneiras</a>
+      </div>
+      {% endif %}
+    </div>
+
+    {# 1.2 — Ocorrências sanitárias (temperatura, fezes, umbigo) #}
+    <div class="p-4 border-bottom">
+      <div class="form-section-title">Ocorrências sanitárias recentes</div>
+      {% if ocorrencias_recentes %}
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Terneira</th>
+              <th>Data</th>
+              <th class="text-center">Temp. retal</th>
+              <th class="text-center">Fezes</th>
+              <th class="text-center">Umbigo (TIP)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for oc in ocorrencias_recentes %}
+            <tr>
+              <td class="fw-semibold small">{{ oc.animal.identificacao }}</td>
+              <td class="small text-muted">{{ oc.data_inicio|date:"d/m/Y" }}</td>
+              <td class="text-center">
+                {% if oc.temperatura_retal %}
+                  {% with r=oc.avaliacao_temperatura %}
+                    {% if r.alerta %}
+                      <span class="badge text-bg-warning text-dark" title="{{ r.justificativa }}">
+                        {{ oc.temperatura_retal }}°C ⚠️
+                      </span>
+                    {% else %}
+                      <span class="text-muted small">{{ oc.temperatura_retal }}°C</span>
+                    {% endif %}
+                  {% endwith %}
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if oc.escore_fezes is not None %}
+                  {% with r=oc.classificacao_fezes %}
+                    {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                  {% endwith %}
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% if oc.brix_serico_tip is not None %}
+                  {% with r=oc.classificacao_brix_serico %}
+                    {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                  {% endwith %}
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-muted small d-flex align-items-center gap-2 py-2">
+        <i class="bi bi-info-circle"></i>Nenhuma ocorrência sanitária registrada.
+      </div>
+      {% endif %}
+    </div>
+
+    {# 1.3 — Cura de umbigo #}
+    <div class="p-4">
+      <div class="form-section-title">Cura de umbigo</div>
+      {% if curas_recentes %}
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Terneira</th>
+              <th>Data/hora</th>
+              <th>Produto</th>
+              <th class="text-center">Escore infecção</th>
+              <th class="text-center">Classificação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for cura in curas_recentes %}
+            <tr>
+              <td class="fw-semibold small">{{ cura.terneira.identificacao }}</td>
+              <td class="small text-muted">{{ cura.data_hora|date:"d/m/Y H:i" }}</td>
+              <td class="small">{{ cura.produto|default:"—" }}</td>
+              <td class="text-center">
+                {% if cura.escore_infeccao is not None %}
+                  <span class="badge {% if cura.escore_infeccao == 0 %}text-bg-success{% elif cura.escore_infeccao == 1 %}text-bg-warning text-dark{% else %}text-bg-danger{% endif %}">
+                    {{ cura.escore_infeccao }}
+                  </span>
+                {% else %}
+                  <span class="text-muted small">—</span>
+                {% endif %}
+              </td>
+              <td class="text-center">
+                {% with r=cura.classificacao_infeccao %}
+                  {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                {% endwith %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-muted small d-flex align-items-center gap-2 py-2">
+        <i class="bi bi-info-circle"></i>Nenhuma cura de umbigo registrada.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+{# ══ DOMÍNIO 2 — AMBIENTE ═════════════════════════════════════════════════ #}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-primary bg-opacity-10 border-0 py-3">
+    <h5 class="mb-0 fw-semibold"><i class="bi bi-house text-primary me-2"></i>2. Ambiente</h5>
+  </div>
+  <div class="card-body p-0">
+
+    {% if ambientes_recentes %}
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Terneira</th>
+            <th>Data</th>
+            <th>Tipo alojamento</th>
+            <th class="text-center">Área</th>
+            <th class="text-center">Cama</th>
+            <th>Sombra / Ventil.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for amb in ambientes_recentes %}
+          <tr>
+            <td class="ps-4 fw-semibold small">
+              <a href="{% url 'bem_estar_animal:detalhe_ambiente' amb.pk %}" class="text-decoration-none text-dark">
+                {{ amb.terneira.identificacao }}
+              </a>
+            </td>
+            <td class="small text-muted">{{ amb.data_avaliacao|date:"d/m/Y" }}</td>
+            <td class="small">{{ amb.get_tipo_alojamento_display|default:"—" }}</td>
+            <td class="text-center">
+              {% with r=amb.classificacao_area %}
+                {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+              {% endwith %}
+              {% if amb.dimensao_baia_m2 %}
+                <div class="text-muted" style="font-size:.72rem;">{{ amb.dimensao_baia_m2 }} m²{% if amb.numero_animais_baia %} / {{ amb.numero_animais_baia }} animais{% endif %}</div>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% with r=amb.classificacao_cama %}
+                {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+              {% endwith %}
+              {% if amb.profundidade_cama_cm %}
+                <div class="text-muted" style="font-size:.72rem;">{{ amb.profundidade_cama_cm }} cm</div>
+              {% endif %}
+            </td>
+            <td class="small">
+              {% if amb.tem_sombra is not None %}
+                <span class="me-1" title="Sombra">{% if amb.tem_sombra %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %} Sombra</span>
+              {% endif %}
+              {% if amb.tem_ventilacao is not None %}
+                <span title="Ventilação">{% if amb.tem_ventilacao %}<i class="bi bi-check-circle-fill text-success"></i>{% else %}<i class="bi bi-x-circle-fill text-danger"></i>{% endif %} Ventil.</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-4 text-muted small d-flex align-items-center gap-2">
+      <i class="bi bi-info-circle"></i>Nenhuma avaliação de ambiente registrada.
+      <a href="{% url 'bem_estar_animal:lista_ambiente' %}">Registrar avaliação</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ══ DOMÍNIO 3 — LIMPEZA E DESINFECÇÃO ═══════════════════════════════════ #}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-warning bg-opacity-10 border-0 py-3">
+    <h5 class="mb-0 fw-semibold"><i class="bi bi-droplet text-warning me-2"></i>3. Limpeza e Desinfecção</h5>
+  </div>
+  <div class="card-body p-0">
+
+    {% if ambientes_recentes %}
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Terneira</th>
+            <th>Data</th>
+            <th class="text-center">Lavagem mamadeiras</th>
+            <th class="text-center">Lavagem bebedouros</th>
+            <th class="text-center">Treinamento equipe</th>
+            <th class="text-center">POP elaborado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for amb in ambientes_recentes %}
+          {% if amb.freq_lavagem_mamadeiras or amb.freq_lavagem_bebedouros or amb.treinamento_equipe is not None %}
+          <tr>
+            <td class="ps-4 fw-semibold small">{{ amb.terneira.identificacao }}</td>
+            <td class="small text-muted">{{ amb.data_avaliacao|date:"d/m/Y" }}</td>
+            <td class="text-center small">{{ amb.get_freq_lavagem_mamadeiras_display|default:"—" }}</td>
+            <td class="text-center small">{{ amb.get_freq_lavagem_bebedouros_display|default:"—" }}</td>
+            <td class="text-center">
+              {% if amb.treinamento_equipe is None %}
+                <span class="badge text-bg-secondary" style="font-size:.65rem;">N/I</span>
+              {% elif amb.treinamento_equipe %}
+                <span class="badge text-bg-success" style="font-size:.65rem;">Sim</span>
+              {% else %}
+                <span class="badge text-bg-danger" style="font-size:.65rem;">Não</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if amb.tem_pop_elaborado is None %}
+                <span class="badge text-bg-secondary" style="font-size:.65rem;">N/I</span>
+              {% elif amb.tem_pop_elaborado %}
+                <span class="badge text-bg-success" style="font-size:.65rem;">Sim</span>
+              {% else %}
+                <span class="badge text-bg-warning text-dark" style="font-size:.65rem;">Não</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-4 text-muted small d-flex align-items-center gap-2">
+      <i class="bi bi-info-circle"></i>
+      Dados de limpeza e desinfecção são registrados nas avaliações de ambiente.
+      <a href="{% url 'bem_estar_animal:lista_ambiente' %}">Ver avaliações</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ══ DOMÍNIO 4 — COLOSTRAGEM E ALEITAMENTO ═══════════════════════════════ #}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-info bg-opacity-10 border-0 py-3">
+    <h5 class="mb-0 fw-semibold"><i class="bi bi-droplet-half text-info me-2"></i>4. Colostragem e Aleitamento</h5>
+  </div>
+  <div class="card-body p-0">
+
+    {# 4.1 — Colostragem (volume 1ª e 2ª mamada) #}
+    {% if colostragens_recentes %}
+    <div class="p-4 border-bottom">
+      <div class="form-section-title">Colostragem — volume e classificação</div>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Terneira</th>
+              <th>Data</th>
+              <th class="text-center">Volume 1ª mamada</th>
+              <th class="text-center">Classif. 1ª mamada</th>
+              <th class="text-center">Volume 2ª mamada</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for col in colostragens_recentes %}
+            <tr>
+              <td class="fw-semibold small">{{ col.terneira.identificacao }}</td>
+              <td class="small text-muted">{{ col.data_hora|date:"d/m/Y" }}</td>
+              <td class="text-center small">{{ col.volume_ml }} ml</td>
+              <td class="text-center">
+                {% with r=col.classificacao_volume_primeira_mamada %}
+                  {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                {% endwith %}
+              </td>
+              <td class="text-center small">
+                {{ col.volume_segunda_mamada_ml|default:"—" }}{% if col.volume_segunda_mamada_ml %} ml{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    {# 4.2 — Protocolo alimentar (aleitamento) #}
+    <div class="p-4">
+      <div class="form-section-title">Protocolo alimentar — aleitamento</div>
+      {% if protocolos_recentes %}
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Terneira</th>
+              <th>Início</th>
+              <th>Tipo leite</th>
+              <th class="text-center">Volume diário</th>
+              <th class="text-center">Classif. volume</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prot in protocolos_recentes %}
+            <tr>
+              <td class="fw-semibold small">{{ prot.terneira.identificacao }}</td>
+              <td class="small text-muted">{{ prot.data_inicio|date:"d/m/Y" }}</td>
+              <td class="small">{{ prot.get_tipo_alimento_display|default:"—" }}</td>
+              <td class="text-center small">
+                {% if prot.volume_dia_0_30_litros %}{{ prot.volume_dia_0_30_litros }} L{% else %}—{% endif %}
+              </td>
+              <td class="text-center">
+                {% with r=prot.classificacao_volume_0_30d %}
+                  {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                {% endwith %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="text-muted small d-flex align-items-center gap-2 py-2">
+        <i class="bi bi-info-circle"></i>Nenhum protocolo alimentar registrado.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+
+{# ══ DOMÍNIO 5 — ÁGUA E DIETA SÓLIDA ══════════════════════════════════════ #}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-success bg-opacity-10 border-0 py-3">
+    <h5 class="mb-0 fw-semibold"><i class="bi bi-cup-straw text-success me-2"></i>5. Água e Dieta Sólida</h5>
+  </div>
+  <div class="card-body p-0">
+
+    {% if dietas_recentes %}
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Terneira</th>
+            <th>Data</th>
+            <th class="text-center">Início água</th>
+            <th class="text-center">Classif. água</th>
+            <th class="text-center">Início concentrado</th>
+            <th class="text-center">Classif. concentrado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for dieta in dietas_recentes %}
+          <tr>
+            <td class="ps-4 fw-semibold small">{{ dieta.terneira.identificacao }}</td>
+            <td class="small text-muted">{{ dieta.data_avaliacao|date:"d/m/Y" }}</td>
+            <td class="text-center small">
+              {% if dieta.inicio_oferta_agua is not None %}{{ dieta.inicio_oferta_agua }}º dia{% else %}—{% endif %}
+            </td>
+            <td class="text-center">
+              {% with r=dieta.classificacao_inicio_agua %}
+                {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+              {% endwith %}
+            </td>
+            <td class="text-center small">
+              {% if dieta.inicio_concentrado_dias is not None %}{{ dieta.inicio_concentrado_dias }}º dia{% else %}—{% endif %}
+            </td>
+            <td class="text-center">
+              {% with r=dieta.classificacao_inicio_concentrado %}
+                {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+              {% endwith %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-4 text-muted small d-flex align-items-center gap-2">
+      <i class="bi bi-info-circle"></i>Nenhuma avaliação de dieta sólida registrada.
+    </div>
+    {% endif %}
+
+    {# Desaleitamento #}
+    {% if desaleitamentos_recentes %}
+    <div class="p-4 border-top">
+      <div class="form-section-title">Desaleitamento</div>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Terneira</th>
+              <th>Início</th>
+              <th>Método</th>
+              <th class="text-center">Classif. gradual</th>
+              <th class="text-center">Concentrado</th>
+              <th class="text-center">Classif. conc.</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for des in desaleitamentos_recentes %}
+            <tr>
+              <td class="fw-semibold small">{{ des.terneira.identificacao }}</td>
+              <td class="small text-muted">{{ des.data|date:"d/m/Y" }}</td>
+              <td class="small">{{ des.get_metodo_desaleitamento_display|default:"—" }}</td>
+              <td class="text-center">
+                {% with r=des.classificacao_duracao_gradual %}
+                  {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                {% endwith %}
+              </td>
+              <td class="text-center small">
+                {% if des.consumo_concentrado_kg %}{{ des.consumo_concentrado_kg }} kg{% else %}—{% endif %}
+              </td>
+              <td class="text-center">
+                {% with r=des.classificacao_consumo_concentrado %}
+                  {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                {% endwith %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{# ══ DOMÍNIO 6 — COMPORTAMENTO E DOCUMENTAÇÃO ════════════════════════════ #}
+<div class="card border-0 shadow-sm mb-4">
+  <div class="card-header bg-secondary bg-opacity-10 border-0 py-3">
+    <div class="d-flex align-items-center justify-content-between">
+      <h5 class="mb-0 fw-semibold"><i class="bi bi-emoji-smile text-secondary me-2"></i>6. Comportamento e Documentação</h5>
+      <a href="{% url 'bem_estar_animal:lista_comportamento' %}" class="btn btn-sm btn-outline-secondary">Ver todas</a>
+    </div>
+  </div>
+  <div class="card-body p-0">
+
+    {% if comportamentos_recentes %}
+    <div class="table-responsive">
+      <table class="table table-hover table-sm mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-4">Terneira</th>
+            <th>Data</th>
+            <th class="text-center">Estímulo 6h</th>
+            <th class="text-center">Mochação</th>
+            <th class="text-center">Protocolo dor</th>
+            <th class="text-center">Agrupamento</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for comp in comportamentos_recentes %}
+          <tr>
+            <td class="ps-4 fw-semibold small">
+              <a href="{% url 'bem_estar_animal:detalhe_comportamento' comp.pk %}" class="text-decoration-none text-dark">
+                {{ comp.terneira.identificacao }}
+              </a>
+            </td>
+            <td class="small text-muted">{{ comp.data_avaliacao|date:"d/m/Y" }}</td>
+            <td class="text-center">
+              {% with r=comp.classificacao_estimulo_6h %}
+                {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+              {% endwith %}
+            </td>
+            <td class="text-center">
+              {% if comp.mocacao_realizada %}
+                {% with r=comp.classificacao_idade_mocacao %}
+                  {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+                {% endwith %}
+                {% if comp.mocacao_idade_semanas %}
+                  <div class="text-muted" style="font-size:.72rem;">{{ comp.mocacao_idade_semanas }} sem.</div>
+                {% endif %}
+              {% else %}
+                <span class="badge text-bg-secondary" style="font-size:.65rem;">Não realizada</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% with r=comp.classificacao_protocolo_dor %}
+                {% include "partials/classificacao_bea.html" with resultado=r rotulo="" %}
+              {% endwith %}
+            </td>
+            <td class="text-center small text-muted">
+              {% if comp.idade_agrupamento_dias %}{{ comp.idade_agrupamento_dias }}d{% else %}—{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="p-4 text-muted small d-flex align-items-center gap-2">
+      <i class="bi bi-info-circle"></i>Nenhuma avaliação de comportamento registrada.
+      <a href="{% url 'bem_estar_animal:lista_comportamento' %}">Registrar avaliação</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endblock %}

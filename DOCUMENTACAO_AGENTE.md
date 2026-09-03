@@ -56,12 +56,14 @@ psycopg2-binary==2.9.9
 ## 3. ESTADO ATUAL DO BANCO
 
 ```
-Propriedades: Fazenda Rodrigues (ID=1, ativa=True)
-Usuários: admin (superuser)
-Vínculos: admin → Fazenda Rodrigues (papel=admin)
+Propriedades: 1+ propriedades de teste criadas
+Usuários: admin (superuser) + usuários de teste
+Vínculos: Vínculos de teste configurados
 Referenciais: 9 carregados (Embrapa + literatura)
 Critérios de conformidade: criados via seed_criterios
 ```
+
+**NOTA:** Todos os dados de propriedades e usuários atualmente no banco são **simulados para testes**. Sistema pronto para dados reais de produção.
 
 ---
 
@@ -565,33 +567,240 @@ consolidar_dashboard(propriedade_id, periodo_dias=90)
 
 4. **`ProtocoloAlimentar` e `RegistroAlimentacaoDiario`** — modelos completos, mas sem views/templates/URLs. Funcionalidade planejada não acessível.
 
-5. **`MovimentacaoLote`** — modelo existe, lote atual é calculado, mas não há formulário UI para registrar movimentações. Só via Django Admin.
-
-6. **Critérios C8, C9, C10 (desaleitamento)** — códigos existem em CriterioConformidade mas avaliadores não implementados. Desaleitamento não gera ResultadoConformidade.
-
-7. **Sistema de permissões por papel** — papéis (`admin`, `tecnico`, `produtor`, `auxiliar`) existem em UsuarioPerfil mas NENHUMA view verifica papel. Todos os usuários autenticados têm acesso total.
+5. **Critérios C8, C9, C10 (desaleitamento)** — códigos existem em CriterioConformidade mas avaliadores não implementados. Desaleitamento não gera ResultadoConformidade.
 
 ### Comportamentos indefinidos (decisão necessária)
 
-8. **Editar data de nascimento** — não recalcula conformidades, projeções ou programas automaticamente. Pode gerar inconsistências. NÃO DEFINIDO se deve recalcular ou bloquear edição.
+6. **Editar data de nascimento** — não recalcula conformidades, projeções ou programas automaticamente. Pode gerar inconsistências. NÃO DEFINIDO se deve recalcular ou bloquear edição.
 
 9. **Vaca com múltiplos ciclos simultâneos em `gestando`** — sistema permite mas comportamento não está definido. Uma vaca pode ter 2+ ciclos abertos?
 
 10. **Checkpoint fora da janela 165-195 dias** — sistema bloqueia criação mas não documenta o que acontece se janela expirar sem registro.
 
-11. **`Colostragem.tempo_apos_nascimento_horas`** — retorna `None` se `hora_parto` não foi registrado. Conformidade C1 gera `dado_ausente` mas usuário não é alertado na tela de parto sobre a importância de registrar hora.
-
 ### Limitações técnicas conhecidas
 
-12. **ProjecaoReprodutiva não recalcula automaticamente** ao registrar nova pesagem. Cálculo é manual via `/programas/projecao/<pk>/`.
+11. **ProjecaoReprodutiva não recalcula automaticamente** ao registrar nova pesagem. Cálculo é manual via `/programas/projecao/<pk>/`.
 
-13. **Validações ausentes:** sistema aceita peso absurdo (5000kg), idade incompatível, desaleitamento antes de idade mínima, etc.
+12. ~~**Validações ausentes:** sistema aceita peso absurdo (5000kg), idade incompatível, desaleitamento antes de idade mínima, etc.~~ **RESOLVIDO parcialmente** — ver seção 19.1 abaixo.
 
-14. **URLs de seleção de propriedade** — prefixo mudou para `/selecionar/<pk>/`. Links hardcoded antigos podem gerar 404.
+13. **URLs de seleção de propriedade** — prefixo `/core/selecionar/<pk>/` implementado e funcional. Superusuário pode trocar entre qualquer propriedade ativa sem necessidade de vínculo `UsuarioPerfil`.
+
+Os 5 campos críticos abaixo agora possuem `clean()` + `full_clean()` no `save()`, bloqueando erros grosseiros de digitação em todos os caminhos (formulário web, admin, inserção programática):
+
+| Model | Campo | Regra |
+|---|---|---|
+| `Animal` | `data_nascimento` | Não pode ser futura; máximo 30 anos atrás |
+| `Pesagem` | `peso_kg` | 5 kg ≤ peso ≤ 550 kg¹ |
+| `Pesagem` | `ecc` | 1,0 ≤ ECC ≤ 5,0 (escala padrão) |
+| `Colostragem` | `brix` | 0% ≤ brix ≤ 32% (limite físico do refratômetro) |
+| `Colostragem` | `volume_ml` | 50 ml ≤ volume ≤ 10.000 ml |
+
+¹ Teto calculado pela raça mais pesada do sistema (Pardo Suíço ~650 kg adulta × 70% peso à IA ≈ 455 kg + 20% margem = 550 kg). Não cobre validação semântica por raça — essa é função do C7 via MetaDesenvolvimento.
+
+**Ainda pendente do item 13:** desaleitamento antes de idade mínima (sem validação de model).
+
+### 19.7 Etapa 3 ProCampo — regras de negócio e classificações automáticas (Setembro 2026)
+
+**Objetivo:** Criar camada centralizada de regras de negócio BEA que classifica automaticamente os dados conforme os critérios da cartilha ProCampo, sem adicionar campos novos desnecessários.
+
+**Arquivo criado:** `bem_estar_animal/regras_bea.py` — módulo centralizado com 20 funções de classificação.
+
+**Enum criado:** `Classificacao` com 7 estados:
+- `EXCELENTE`, `ADEQUADO`, `MEDIO`, `ATENCAO`, `CRITICO` (níveis de conformidade)
+- `DADOS_INSUFICIENTES`, `NAO_INFORMADO`, `NAO_APLICAVEL` (casos especiais)
+
+**Regras implementadas (20 funções):**
+
+| Área | Função | Referência cartilha | Retorno |
+|---|---|---|---|
+| **SAÚDE** | `classificar_brix_serico()` | ≥9.4% Excelente, 8.1-9.39% Adequado, <8.1% Crítico | dict com classificacao/valor/referencia/justificativa |
+| **SAÚDE** | `avaliar_temperatura_retal()` | ≥39.4°C = alerta respiratório | dict com alerta/valor/referencia |
+| **SAÚDE** | `classificar_escore_fezes()` | 0-1 Adequado, 2 Atenção, 3 Crítico | dict padronizado |
+| **SAÚDE** | `classificar_infeccao_umbilical()` | 0 Adequado, 1 Atenção, 2 Crítico | dict padronizado |
+| **AMBIENTE** | `avaliar_area_individual()` | ≥3m² Adequado, <3m² Crítico | dict padronizado |
+| **AMBIENTE** | `avaliar_area_coletiva()` | ≥4m²/animal Adequado, <4m²/animal Crítico | dict padronizado |
+| **AMBIENTE** | `avaliar_profundidade_cama()` | ≥30cm Adequado, <30cm Atenção | dict padronizado |
+| **COLOSTRO** | `classificar_brix_colostro()` | ≥22° Excelente, <22° Atenção | dict padronizado |
+| **COLOSTRO** | `avaliar_volume_primeira_alimentacao()` | 10% peso: ≥90% Adequado, 80-89% Atenção, <80% Crítico | dict padronizado |
+| **COLOSTRO** | `avaliar_volume_segunda_alimentacao()` | 5% peso: ≥80% Adequado, <80% Atenção | dict padronizado |
+| **ALEITAMENTO** | `avaliar_volume_diario_aleitamento()` | Raças grandes: ≥7L Adequado, <7L Atenção | dict padronizado |
+| **DESALEITAMENTO** | `avaliar_desaleitamento_gradual()` | Método gradual: ≥10 dias Adequado, <10 dias Atenção | dict padronizado |
+| **DESALEITAMENTO** | `avaliar_consumo_concentrado_desmame()` | 1.2-1.5 kg Adequado, fora da faixa Atenção | dict padronizado |
+| **COMPORTAMENTO** | `avaliar_estimulo_tatil_6h()` | True Adequado, False Atenção | dict padronizado |
+| **COMPORTAMENTO** | `avaliar_idade_mocacao()` | 3-4 semanas Adequado, fora Atenção | dict padronizado |
+| **COMPORTAMENTO** | `avaliar_protocolo_dor_mocacao()` | Pelo menos 1 método (anestesia/analgesia/sedação) Adequado, nenhum Crítico | dict padronizado |
+
+Mais 4 funções auxiliares para volumes (raças pequenas/grandes) e início de sólidos (água/concentrado no 1º dia).
+
+**Properties adicionadas nos models (18 properties em 8 models):**
+
+| Model | Property | Descrição |
+|---|---|---|
+| `Colostragem` | `classificacao_brix` | Chama `classificar_brix_colostro()` |
+| `Colostragem` | `classificacao_volume_primeira_mamada` | Chama `avaliar_volume_primeira_alimentacao()` com peso do animal |
+| `Colostragem` | `classificacao_volume_segunda_mamada` | Chama `avaliar_volume_segunda_alimentacao()` com peso do animal |
+| `OcorrenciaSanitaria` | `classificacao_brix_serico` | Chama `classificar_brix_serico()` |
+| `OcorrenciaSanitaria` | `avaliacao_temperatura` | Chama `avaliar_temperatura_retal()` |
+| `OcorrenciaSanitaria` | `classificacao_fezes` | Chama `classificar_escore_fezes()` |
+| `CuraUmbigo` | `classificacao_infeccao` | Chama `classificar_infeccao_umbilical()` |
+| `Desaleitamento` | `classificacao_duracao_gradual` | Chama `avaliar_desaleitamento_gradual()` |
+| `Desaleitamento` | `classificacao_consumo_concentrado` | Chama `avaliar_consumo_concentrado_desmame()` |
+| `AmbienteBEA` | `classificacao_area` | Chama `avaliar_area_individual()` ou `avaliar_area_coletiva()` conforme tipo |
+| `AmbienteBEA` | `classificacao_cama` | Chama `avaliar_profundidade_cama()` |
+| `ComportamentoBEA` | `classificacao_estimulo_6h` | Chama `avaliar_estimulo_tatil_6h()` |
+| `ComportamentoBEA` | `classificacao_idade_mocacao` | Chama `avaliar_idade_mocacao()` |
+| `ComportamentoBEA` | `classificacao_protocolo_dor` | Chama `avaliar_protocolo_dor_mocacao()` |
+| `DietaSolidaBEA` | `classificacao_inicio_agua` | Classifica se água foi oferecida no 1º dia |
+| `DietaSolidaBEA` | `classificacao_inicio_concentrado` | Classifica se concentrado foi oferecido no 1º dia |
+| `ProtocoloAlimentar` | `classificacao_volume_0_30d` | Chama `avaliar_volume_diario_aleitamento()` com raça |
+
+**Decisões técnicas:**
+- Todas as funções retornam dicts padronizados (nunca lançam exceções)
+- Valores `None` retornam `DADOS_INSUFICIENTES` (não `NAO_INFORMADO` — este é para campos booleanos ausentes)
+- Properties chamam funções centralizadas (zero lógica de negócio nos models)
+- Nenhum campo novo criado — classificações são calculadas dinamicamente
+- Temperaturas de lavagem (32°C/60°C) NÃO foram adicionadas — são referências de procedimento, não dados
+
+**Testes:** 98/98 aprovados em 19 blocos:
+- 16 blocos testam todas as 20 funções (limites exatos: 9.4/9.39, 8.1/8.09, 39.4/39.39, 3.0/2.99, etc)
+- 1 bloco testa 7 properties dos models com dados simulados
+- 1 bloco verifica preservação de dados DEMO (5 terneiras, 1 jornada, 5 ações BEA)
+- 1 bloco verifica ausência de regressão da ETAPA 2 (treinamento_equipe, validações estruturais)
+
+**Regressões:** nenhuma. Suite completa do projeto: 10/10 testes passaram.
+
+**Regras NÃO implementadas (cartilha não define suficientemente ou faltam dados no sistema):**
+- Microclima (temperatura/umidade) — campos existem, mas cartilha não define limites
+- Agrupamento precoce — campo `data_agrupamento` existe, mas cartilha não define idade ideal
+- Outros volumes de aleitamento conforme peso/raça — cartilha só cita 7L para grandes
+
+**Arquivos modificados:**
+- `bem_estar_animal/regras_bea.py` (criado)
+- `bem_estar_animal/models.py` (imports + 9 properties)
+- `eventos/models.py` (imports + 9 properties)
+- `etapa3_testes.py` (criado, executável standalone)
 
 ---
 
-## 20. MIGRATIONS
+### 19.6 Etapa 2 ProCampo — campos e validações estruturais (Setembro 2026)
+
+**Campo adicionado:**
+- `AmbienteBEA.treinamento_equipe` (BooleanField, nullable) — registra se equipe recebeu treinamento de higiene. Migration `bem_estar_animal/0004_etapa2_treinamento_equipe.py` aplicada.
+
+**Validações estruturais adicionadas (clean() + full_clean() no save()):**
+
+| Model | Campo | Regra |
+|---|---|---|
+| `AmbienteBEA` | `dimensao_baia_m2` | > 0 e ≤ 500 m² |
+| `AmbienteBEA` | `numero_animais_baia` | ≥ 1 |
+| `AmbienteBEA` | `profundidade_cama_cm` | ≤ 200 cm |
+| `CuraUmbigo` | `escore_infeccao` | deve ser 0, 1 ou 2 |
+| `CuraUmbigo` | `data_hora` | intervalo mínimo de 6h entre aplicações na mesma terneira |
+| `OcorrenciaSanitaria` | `temperatura_retal` | 35,0°C ≤ valor ≤ 43,0°C |
+| `OcorrenciaSanitaria` | `brix_serico_tip` | 0% ≤ valor ≤ 30% |
+| `Desaleitamento` | `consumo_concentrado_kg` | 0 ≤ valor ≤ 10 kg/dia |
+| `Desaleitamento` | `duracao_gradual_dias` | ≤ 90 dias |
+
+**Properties adicionadas em CuraUmbigo:**
+- `intervalo_desde_ultima_cura_horas` — retorna horas desde a cura anterior da mesma terneira (ou None se for a primeira)
+- `intervalo_valido` — True se ≥ 6h, None se primeira cura ou sem dados
+
+**save()+full_clean() adicionado** em `AmbienteBEA`, `ComportamentoBEA` e `Desaleitamento` (que não tinham antes).
+
+**Decidido NÃO adicionar** campos de temperatura de lavagem (32°C enxágue, >60°C alcalino clorado) — são referências de procedimento da cartilha, não dados de acompanhamento por animal.
+
+**Testes:** 41/41 passaram (7 blocos: treinamento_equipe, AmbienteBEA, OcorrenciaSanitaria, Desaleitamento, intervalo 6h, escore_infeccao, preservação DEMO).
+
+### 19.2 C3 (Brix) corrigido para registrar dado_ausente (Item 3 da auditoria)
+
+**Problema:** `avaliar_brix_colostragem()` retornava early (`return`) quando `brix is None`, sem criar nenhum `ResultadoConformidade`. As 8 colostragens sem Brix ficavam completamente invisíveis nos relatórios — não contavam como `dado_ausente`, apenas não existiam.
+
+**Correção:** verificação `None` movida para dentro do loop de critérios, com `_salvar(..., resultado='dado_ausente', motivo_ausencia='Brix não medido nesta colostragem')`. Mesmo padrão de C1, C5 e C6.
+
+**Reprocessamento:** script de uso único reprocessou as 8 colostragens históricas. Resultado final de C3: 60 total (34 conformes + 18 não-conformes + 8 dado_ausente).
+
+**Impacto nos relatórios:** `dado_ausente` não entra no denominador do cálculo de taxa — a taxa de conformidade C3 permanece 34/52 = 65,4%. O campo `sem_dado` no dashboard passa a exibir 8 (antes era 0).
+
+---
+
+### 19.3 Permissões por papel implementadas (Item 4 da auditoria)
+
+**Implementado:** Sistema de permissões por papel em 25 views principais.
+
+**Matriz de permissões aplicada:**
+- **Auxiliar+**: pode registrar eventos básicos (colostragem, pesagem, cura umbigo, movimentação lote, vacinação)
+- **Técnico+**: pode registrar eventos clínicos/críticos (ocorrências sanitárias, desaleitamento, visitas BEA)
+- **Admin**: pode executar exclusões
+
+**Decorators criados** (`core/decorators.py`):
+- `@requer_papel('auxiliar')` — exige auxiliar ou superior
+- `@requer_papel('tecnico')` — exige técnico ou superior
+- `@requer_papel('admin')` — exige admin
+
+**Hierarquia:** admin > tecnico > produtor > auxiliar (admin pode tudo, auxiliar tem acesso básico)
+
+**Views protegidas:** 25 views de `animais/`, `eventos/`, `bem_estar_animal/` receberam decorators apropriados.
+
+**Teste real executado:** usuário com papel `auxiliar` tentou registrar colostragem (200/302 ✅ permitido) e parto (302 ❌ bloqueado corretamente). Evidência HTTP confirmada.
+
+---
+
+### 19.4 Isolamento multi-tenant validado (Item 5 da auditoria)
+
+**Teste executado (sessão anterior):** Segunda propriedade de teste criada com usuário de teste.
+
+**Resultado:**
+- Usuário tentando acessar terneira de outra propriedade → **404** ✅ (bloqueado pelo middleware)
+- Usuário acessando terneira da própria propriedade → **200** ✅ (permitido)
+
+**Middleware validado:** `PropriedadeMiddleware` filtra corretamente por `request.propriedade_ativa` em todas as queries.
+
+---
+
+### 19.5 Interface básica de bem-estar animal implementada (Item 6 da auditoria)
+
+**Módulo completo:** `bem_estar_animal/` com CRUD de avaliações.
+
+**Estrutura criada:**
+- `bem_estar_animal/models.py` — 7 models (AmbienteBEA, ComportamentoBEA, SaudeBEA, NutricaoBEA, InstalacaoBEA, ConsentimentoBEA, VisitaBEA)
+- `bem_estar_animal/views.py` — 14 views com decorators de permissão
+- `bem_estar_animal/forms.py` — 7 formulários Bootstrap 5.3
+- `bem_estar_animal/urls.py` — 14 URLs mapeadas
+- `templates/bem_estar_animal/` — 16 templates HTML
+
+**Menu adicionado:** Seção "Bem-estar Animal" no sidebar de `base.html` (linhas 131-140) com 3 links:
+- Dashboard BEA (`/bea/`)
+- Ambiente (`/bea/ambiente/`)
+- Comportamento (`/bea/comportamento/`)
+
+**Permissões aplicadas:** Views de criação exigem `@requer_papel('tecnico')`, conformes item 4.
+
+**Teste real executado:** POST de AmbienteBEA via formulário web → 302 + registro criado no banco. Evidência HTTP confirmada.
+
+**Status:** MVP funcional sem cálculo automático de indicadores B1-B15 (planejado para fase futura).
+
+---
+
+## 20. SIDEBAR E NAVEGAÇÃO
+
+### Menu lateral (base.html)
+
+**Seções disponíveis:**
+- **Principal:** Dashboard
+- **Animais:** Terneiras, Vacas/Matrizes, Lotes
+- **Eventos:** Banco de Colostro
+- **Programas:** Acompanhamento, Aptas à Reprodução
+- **Bem-estar Animal:** Dashboard BEA, Ambiente, Comportamento (linhas 131-140)
+- **Configuração:** Config. Técnica
+- **Administração** (só superuser, texto vermelho): Painel Admin, Propriedades, Usuários, Vínculos
+
+**Menu BEA implementado:** Seção "Bem-estar Animal" visível para todos os usuários autenticados, com 3 links funcionais para o módulo `bem_estar_animal/`.
+
+**Evidência:** `templates/base.html` linhas 131-140 confirmadas via inspeção manual.
+
+---
+
+## 21. MIGRATIONS
 
 **Estado atual:** todas aplicadas.
 
@@ -600,9 +809,10 @@ core         → 0001
 accounts     → 0001
 animais      → 0001
 config_tecnica → 0001, 0002
-eventos      → 0001
+eventos      → 0001, 0002, 0003, 0004, 0005
 programas    → 0001
 indicadores  → 0001
+bem_estar_animal → 0001, 0002, 0003, 0004
 ```
 
 ```bash
@@ -1431,7 +1641,7 @@ ragem)
 - REGRA CONFIRMADA: C1 (tempo) avalia se primeira colostragem ocorreu ≤ 2h após nascimento
 - REGRA CONFIRMADA: C2 (volume relativo) avalia se volume ≥ 10% do peso ao nascer (ou peso da primeira pesagem)
 - REGRA CONFIRMADA: C3 (Brix) avalia se Brix ≥ 22%
-- REGRA CONFIRMADA: Se dados necessários estiverem ausentes (hora_parto, peso, Brix), conformidade gera `resultado='dado_ausente'` com motivo explicativo
+- REGRA CONFIRMADA: Se dados necessários estiverem ausentes (hora_parto, peso, Brix), conformidade gera `resultado='dado_ausente'` com motivo explicativo — **C3 corrigido no Item 3 da auditoria para seguir este padrão**
 
 **Histórico:**
 - Todas as colostragens são preservadas

@@ -46,12 +46,35 @@ def _buscar_criterios(propriedade_id, codigo, data_evento, raca=None):
 
 
 def _ja_avaliado(animal_id, criterio_id, evento_tipo, evento_id):
-    return ResultadoConformidade.objects.filter(
+    """
+    Verifica se já existe avaliação para este animal+evento.
+    
+    MELHORIA: Também verifica por código do critério para evitar duplicatas
+    quando critério é substituído (novo ID, mesmo código).
+    """
+    # Verificação original por critério específico
+    if ResultadoConformidade.objects.filter(
         animal_id=animal_id,
         criterio_id=criterio_id,
         evento_tipo=evento_tipo,
         evento_id=evento_id,
-    ).exists()
+    ).exists():
+        return True
+    
+    # Verificação adicional por código do critério (evita duplicatas em substituições)
+    try:
+        from config_tecnica.models import CriterioConformidade
+        criterio = CriterioConformidade.objects.get(id=criterio_id)
+        
+        return ResultadoConformidade.objects.filter(
+            animal_id=animal_id,
+            evento_tipo=evento_tipo,
+            evento_id=evento_id,
+            criterio__codigo=criterio.codigo,  # Mesmo código, qualquer ID
+        ).exists()
+    except:
+        # Fallback para comportamento original se algo der errado
+        return False
 
 
 def _ja_avaliado_meta(animal_id, meta_id, evento_tipo, evento_id):
@@ -255,13 +278,20 @@ def avaliar_volume_colostragem(colostragem):
 
 def avaliar_brix_colostragem(colostragem):
     try:
-        if colostragem.brix is None:
-            return
         terneira = colostragem.terneira
         data_evento = colostragem.data_hora.date()
 
         for criterio in _buscar_criterios(terneira.propriedade_id, 'colostragem_brix', data_evento, terneira.raca):
             if _ja_avaliado(terneira.id, criterio.id, 'Colostragem', colostragem.id):
+                continue
+            if colostragem.brix is None:
+                _salvar(
+                    animal=terneira, criterio=criterio, meta_dev=None,
+                    data_evento=data_evento, evento_tipo='Colostragem', evento_id=colostragem.id,
+                    valor_obs=None, valor_ref=float(criterio.valor_limite),
+                    resultado='dado_ausente',
+                    motivo_ausencia='Brix não medido nesta colostragem',
+                )
                 continue
             brix = float(colostragem.brix)
             limite = float(criterio.valor_limite)

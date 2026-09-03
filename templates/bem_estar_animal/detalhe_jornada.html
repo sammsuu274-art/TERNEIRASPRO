@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+{% block title %}{{ jornada.nome }}{% endblock %}
+{% block nav_bea_jornadas %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-1">
+        <li class="breadcrumb-item"><a href="{% url 'bem_estar_animal:lista_jornadas' %}" class="text-success">Jornadas</a></li>
+        <li class="breadcrumb-item active">{{ jornada.nome }}</li>
+      </ol>
+    </nav>
+    <h4 class="fw-bold mb-0">{{ jornada.nome }}</h4>
+    <div class="text-muted small">
+      <i class="bi bi-house-door me-1"></i>{{ jornada.propriedade.nome }}
+      &nbsp;·&nbsp;
+      <i class="bi bi-person me-1"></i>{{ jornada.produtor.get_full_name|default:jornada.produtor.username }}
+    </div>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    {% if jornada.status == 'em_andamento' %}
+      <span class="badge text-bg-success px-3 py-2 align-self-center">Em andamento</span>
+    {% elif jornada.status == 'planejamento' %}
+      <span class="badge text-bg-info px-3 py-2 align-self-center">Planejamento</span>
+    {% elif jornada.status == 'concluida' %}
+      <span class="badge text-bg-secondary px-3 py-2 align-self-center">Concluída</span>
+    {% elif jornada.status == 'cancelada' %}
+      <span class="badge text-bg-danger px-3 py-2 align-self-center">Cancelada</span>
+    {% endif %}
+    <a href="{% url 'bem_estar_animal:diagnostico_jornada' jornada.pk %}" class="btn btn-outline-success">
+      <i class="bi bi-clipboard2-data me-1"></i>Diagnóstico
+    </a>
+    <a href="{% url 'bem_estar_animal:avaliacao_jornada' jornada.pk %}" class="btn btn-outline-primary">
+      <i class="bi bi-plus-lg me-1"></i>Avaliação
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{# ══ ZONA 1 — Progresso ══════════════════════════════════════════════════ #}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-bar-chart me-1"></i>Progresso
+    </h6>
+  </div>
+
+  {# Visitas #}
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 h-100 text-center">
+      <div class="kpi-label mb-1">Visitas</div>
+      <div class="kpi-value {% if jornada.total_visitas >= jornada.minimo_visitas %}text-success{% else %}text-warning{% endif %}">
+        {{ jornada.total_visitas }}/{{ jornada.minimo_visitas }}
+      </div>
+      {% if jornada.visitas_restantes > 0 %}
+        <div class="text-muted" style="font-size:.72rem;">{{ jornada.visitas_restantes }} restante{{ jornada.visitas_restantes|pluralize }}</div>
+      {% else %}
+        <div class="text-success" style="font-size:.72rem;"><i class="bi bi-check-circle-fill"></i> Mínimo OK</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Ações abertas #}
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 h-100 text-center">
+      <div class="kpi-label mb-1">Ações abertas</div>
+      <div class="kpi-value {% if jornada.acoes_pendentes > 0 %}text-warning{% else %}text-success{% endif %}">
+        {{ jornada.acoes_pendentes }}
+      </div>
+    </div>
+  </div>
+
+  {# Ações concluídas #}
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 h-100 text-center">
+      <div class="kpi-label mb-1">Ações concluídas</div>
+      <div class="kpi-value text-success">{{ jornada.acoes_concluidas }}</div>
+    </div>
+  </div>
+
+  {# Baseline #}
+  <div class="col-6 col-md-3">
+    <div class="card kpi-card p-3 h-100 text-center">
+      <div class="kpi-label mb-1">Baseline</div>
+      {% if jornada.baseline_realizado %}
+        <div class="kpi-value text-success"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="text-success" style="font-size:.72rem;">Realizado</div>
+      {% else %}
+        <div class="kpi-value text-muted"><i class="bi bi-circle"></i></div>
+        <div class="text-warning" style="font-size:.72rem;">Pendente</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Período #}
+  <div class="col-12">
+    <div class="card border-0 bg-light p-3">
+      <div class="row small text-muted">
+        <div class="col-6 col-md-3">
+          <span class="fw-semibold d-block">Início</span>
+          {{ jornada.data_inicio|date:"d/m/Y" }}
+        </div>
+        <div class="col-6 col-md-3">
+          <span class="fw-semibold d-block">Previsão</span>
+          {{ jornada.data_prevista_conclusao|date:"d/m/Y" }}
+        </div>
+        <div class="col-6 col-md-3">
+          <span class="fw-semibold d-block">Duração</span>
+          {{ jornada.duracao_dias }} dias em andamento
+        </div>
+        <div class="col-6 col-md-3">
+          <span class="fw-semibold d-block">Supervisor</span>
+          {{ jornada.supervisor.get_full_name|default:jornada.supervisor.username }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ══ ZONA 2 — 6 Domínios ═════════════════════════════════════════════════ #}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-grid me-1"></i>Diagnóstico — 6 domínios
+    </h6>
+  </div>
+
+  {# D1: Saúde #}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-danger bg-opacity-10 border-0 py-2">
+        <span class="fw-semibold"><i class="bi bi-heart-pulse text-danger me-2"></i>1. Saúde</span>
+      </div>
+      <div class="card-body py-3">
+        {% if jornada.baseline_realizado %}
+          <p class="text-muted small mb-0">Ver dados em <a href="{% url 'bem_estar_animal:diagnostico_jornada' jornada.pk %}">Diagnóstico</a>.</p>
+        {% else %}
+          <div class="d-flex align-items-center gap-2 text-muted small">
+            <i class="bi bi-info-circle"></i>
+            <span>Baseline pendente. <a href="{% url 'bem_estar_animal:diagnostico_jornada' jornada.pk %}">Registrar diagnóstico</a></span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# D2: Ambiente #}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-primary bg-opacity-10 border-0 py-2">
+        <span class="fw-semibold"><i class="bi bi-house text-primary me-2"></i>2. Ambiente</span>
+      </div>
+      <div class="card-body py-3">
+        {% with amb=jornada.propriedade.terneiras.first %}
+          {% if amb %}
+            <p class="text-muted small mb-0">
+              <a href="{% url 'bem_estar_animal:lista_ambiente' %}">Ver avaliações de ambiente</a>
+            </p>
+          {% else %}
+            <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>Sem avaliações de ambiente.</div>
+          {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+  </div>
+
+  {# D3: Limpeza e Desinfecção #}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-warning bg-opacity-10 border-0 py-2">
+        <span class="fw-semibold"><i class="bi bi-droplet text-warning me-2"></i>3. Limpeza e Desinfecção</span>
+      </div>
+      <div class="card-body py-3">
+        <div class="text-muted small">
+          <i class="bi bi-info-circle me-1"></i>
+          Avaliado nas <a href="{% url 'bem_estar_animal:lista_visitas' %}">visitas presenciais</a>.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# D4: Colostragem e Aleitamento #}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-info bg-opacity-10 border-0 py-2">
+        <span class="fw-semibold"><i class="bi bi-droplet-half text-info me-2"></i>4. Colostragem e Aleitamento</span>
+      </div>
+      <div class="card-body py-3">
+        {% if jornada.baseline_realizado %}
+          <p class="text-muted small mb-0">Ver dados em <a href="{% url 'bem_estar_animal:diagnostico_jornada' jornada.pk %}">Diagnóstico</a>.</p>
+        {% else %}
+          <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>Baseline pendente.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# D5: Água e Dieta Sólida #}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-success bg-opacity-10 border-0 py-2">
+        <span class="fw-semibold"><i class="bi bi-cup-straw text-success me-2"></i>5. Água e Dieta Sólida</span>
+      </div>
+      <div class="card-body py-3">
+        {% if jornada.baseline_realizado %}
+          <p class="text-muted small mb-0">Ver dados em <a href="{% url 'bem_estar_animal:diagnostico_jornada' jornada.pk %}">Diagnóstico</a>.</p>
+        {% else %}
+          <div class="text-muted small"><i class="bi bi-info-circle me-1"></i>Baseline pendente.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {# D6: Comportamento e Documentação #}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-secondary bg-opacity-10 border-0 py-2">
+        <span class="fw-semibold"><i class="bi bi-emoji-smile text-secondary me-2"></i>6. Comportamento e Documentação</span>
+      </div>
+      <div class="card-body py-3">
+        <p class="text-muted small mb-0">
+          <a href="{% url 'bem_estar_animal:lista_comportamento' %}">Ver avaliações de comportamento</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ══ ZONA 3 — Visitas ════════════════════════════════════════════════════ #}
+<div class="row g-3 mb-4">
+  <div class="col-12 d-flex align-items-center justify-content-between">
+    <h6 class="text-muted text-uppercase fw-bold small mb-0">
+      <i class="bi bi-calendar-event me-1"></i>Visitas registradas
+    </h6>
+    <a href="{% url 'bem_estar_animal:nova_visita' %}" class="btn btn-sm btn-outline-success">
+      <i class="bi bi-plus-lg me-1"></i>Registrar visita
+    </a>
+  </div>
+
+  <div class="col-12">
+    {% with visitas=jornada.visitas.all %}
+    {% if visitas %}
+    <div class="card border-0 shadow-sm">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="ps-3">Nº</th>
+              <th>Data</th>
+              <th>Tipo</th>
+              <th>Responsável</th>
+              <th class="text-end pe-3">Detalhes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for visita in visitas %}
+            <tr>
+              <td class="ps-3 text-muted">{{ visita.numero_visita|default:"—" }}</td>
+              <td>{{ visita.data_visita|date:"d/m/Y" }}</td>
+              <td>{{ visita.get_tipo_visita_display|default:"—" }}</td>
+              <td>{{ visita.responsavel_tecnico.get_full_name|default:visita.responsavel_tecnico.username }}</td>
+              <td class="text-end pe-3">
+                <a href="{% url 'bem_estar_animal:detalhe_visita' visita.pk %}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-eye"></i>
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-4 text-muted small">
+        <i class="bi bi-calendar3 me-1"></i>Nenhuma visita registrada nesta jornada.
+      </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+  </div>
+</div>
+
+{# ══ ZONA 4 — Plano de Ação ══════════════════════════════════════════════ #}
+<div class="row g-3 mb-4">
+  <div class="col-12 d-flex align-items-center justify-content-between">
+    <h6 class="text-muted text-uppercase fw-bold small mb-0">
+      <i class="bi bi-clipboard-check me-1"></i>Plano de ação
+    </h6>
+    <a href="{% url 'bem_estar_animal:lista_planos_acao' %}" class="btn btn-sm btn-outline-secondary">
+      Ver todas as ações
+    </a>
+  </div>
+
+  {% if acoes_pendentes or acoes_andamento or acoes_concluidas %}
+
+  {# Ações abertas e em andamento #}
+  {% if acoes_pendentes or acoes_andamento %}
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2">
+        <span class="fw-semibold small text-warning">
+          <i class="bi bi-exclamation-circle me-1"></i>Em aberto
+          <span class="badge text-bg-warning ms-1">{{ acoes_pendentes|length|add:acoes_andamento|length }}</span>
+        </span>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for acao in acoes_pendentes %}
+        <div class="list-group-item py-3 px-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+            <div class="flex-grow-1">
+              <span class="fw-semibold small">{{ acao.indicador }}</span>
+              <span class="badge bg-secondary ms-1 small">{{ acao.dominio }}</span>
+              <span class="badge text-bg-secondary ms-1" style="font-size:0.65rem;">Pendente</span>
+              {% if acao.esta_atrasada %}<span class="badge text-bg-danger ms-1" style="font-size:0.65rem;">Atrasada</span>{% endif %}
+              <div class="text-muted" style="font-size:0.78rem;">{{ acao.situacao_encontrada|truncatechars:100 }}</div>
+            </div>
+            <div class="text-end text-muted" style="font-size:0.75rem; white-space:nowrap;">
+              Prazo: {{ acao.prazo|date:"d/m/Y" }}<br>
+              {% if acao.responsavel %}{{ acao.responsavel.get_full_name|default:acao.responsavel.username }}{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% for acao in acoes_andamento %}
+        <div class="list-group-item py-3 px-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+            <div class="flex-grow-1">
+              <span class="fw-semibold small">{{ acao.indicador }}</span>
+              <span class="badge bg-secondary ms-1 small">{{ acao.dominio }}</span>
+              <span class="badge text-bg-primary ms-1" style="font-size:0.65rem;">Em andamento</span>
+              {% if acao.esta_atrasada %}<span class="badge text-bg-danger ms-1" style="font-size:0.65rem;">Atrasada</span>{% endif %}
+              <div class="text-muted" style="font-size:0.78rem;">{{ acao.situacao_encontrada|truncatechars:100 }}</div>
+            </div>
+            <div class="text-end text-muted" style="font-size:0.75rem; white-space:nowrap;">
+              Prazo: {{ acao.prazo|date:"d/m/Y" }}<br>
+              {% if acao.responsavel %}{{ acao.responsavel.get_full_name|default:acao.responsavel.username }}{% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# Ações concluídas #}
+  {% if acoes_concluidas %}
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2">
+        <span class="fw-semibold small text-success">
+          <i class="bi bi-check-circle me-1"></i>Concluídas
+          <span class="badge text-bg-success ms-1">{{ acoes_concluidas|length }}</span>
+        </span>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for acao in acoes_concluidas %}
+        <div class="list-group-item py-2 px-4">
+          <span class="small fw-semibold">{{ acao.indicador }}</span>
+          <span class="badge bg-secondary ms-1" style="font-size:0.65rem;">{{ acao.dominio }}</span>
+          {% if acao.data_conclusao %}
+            <span class="text-muted ms-2" style="font-size:0.75rem;">concluída em {{ acao.data_conclusao|date:"d/m/Y" }}</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body text-center py-4 text-muted small">
+        <i class="bi bi-clipboard me-1"></i>Nenhuma ação no plano ainda.
+        <a href="{% url 'bem_estar_animal:novo_plano_acao' %}" class="ms-1">Criar ação</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+{# ══ ZONA 5 — Observações ════════════════════════════════════════════════ #}
+{% if jornada.objetivo_principal or jornada.observacoes %}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-chat-left-text me-1"></i>Observações
+    </h6>
+  </div>
+  {% if jornada.objetivo_principal %}
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small fw-semibold mb-1">Objetivo principal</div>
+        <p class="mb-0 small">{{ jornada.objetivo_principal }}</p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% if jornada.observacoes %}
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="text-muted small fw-semibold mb-1">Observações gerais</div>
+        <p class="mb-0 small">{{ jornada.observacoes }}</p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

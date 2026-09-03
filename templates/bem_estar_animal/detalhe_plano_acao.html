@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% block title %}{{ acao.indicador }}{% endblock %}
+{% block nav_bea_planos %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-1">
+        <li class="breadcrumb-item"><a href="{% url 'bem_estar_animal:lista_planos_acao' %}" class="text-success">Plano de Ação</a></li>
+        <li class="breadcrumb-item active">{{ acao.indicador|truncatechars:50 }}</li>
+      </ol>
+    </nav>
+    <h4 class="fw-bold mb-1">{{ acao.indicador }}</h4>
+    <div class="d-flex flex-wrap gap-2 align-items-center">
+      <span class="badge bg-secondary">{{ acao.dominio }}</span>
+      {% if acao.status == 'pendente' %}
+        <span class="badge text-bg-secondary">Pendente</span>
+      {% elif acao.status == 'em_andamento' %}
+        <span class="badge text-bg-primary">Em andamento</span>
+      {% elif acao.status == 'concluido' %}
+        <span class="badge text-bg-success">Concluída</span>
+      {% elif acao.status == 'cancelado' %}
+        <span class="badge text-bg-danger">Cancelada</span>
+      {% endif %}
+      {% if acao.prioridade == 'critica' %}
+        <span class="badge text-bg-danger">Prioridade crítica</span>
+      {% elif acao.prioridade == 'alta' %}
+        <span class="badge text-bg-warning text-dark">Prioridade alta</span>
+      {% elif acao.prioridade == 'media' %}
+        <span class="badge text-bg-info text-dark">Prioridade média</span>
+      {% else %}
+        <span class="badge text-bg-secondary">Prioridade baixa</span>
+      {% endif %}
+      {% if acao.esta_atrasada %}
+        <span class="badge text-bg-danger"><i class="bi bi-clock me-1"></i>Atrasada</span>
+      {% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="{% url 'bem_estar_animal:editar_plano_acao' acao.pk %}" class="btn btn-outline-secondary">
+      <i class="bi bi-pencil me-1"></i>Editar
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  {# Coluna principal #}
+  <div class="col-12 col-lg-8">
+
+    {# Situação encontrada #}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="form-section-title">Situação encontrada</div>
+        <p class="mb-0">{{ acao.situacao_encontrada }}</p>
+      </div>
+    </div>
+
+    {# Ação recomendada #}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="form-section-title">Ação recomendada</div>
+        <p class="mb-0">{{ acao.acao_recomendada }}</p>
+      </div>
+    </div>
+
+    {# Resultado obtido (se concluída) #}
+    {% if acao.status == 'concluido' and acao.resultado_obtido %}
+    <div class="card border-0 shadow-sm mb-4 border-success border-start border-4">
+      <div class="card-body">
+        <div class="form-section-title text-success">Resultado obtido</div>
+        <p class="mb-0">{{ acao.resultado_obtido }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Observações #}
+    {% if acao.observacoes %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="form-section-title">Observações</div>
+        <p class="mb-0 text-muted small">{{ acao.observacoes }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Alterar status #}
+    {% if acao.status not in 'concluido,cancelado' %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-arrow-repeat me-2"></i>Alterar status</h6>
+      </div>
+      <div class="card-body">
+        <form method="post" action="{% url 'bem_estar_animal:alterar_situacao_acao' acao.pk %}">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label class="form-label small">Novo status</label>
+              <select name="status" class="form-select">
+                {% for val, label in acao.STATUS_ACAO_CHOICES %}
+                  <option value="{{ val }}" {% if acao.status == val %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label small">Data de conclusão</label>
+              <input type="date" name="data_conclusao" class="form-control"
+                     value="{{ acao.data_conclusao|date:'Y-m-d'|default:'' }}">
+            </div>
+            <div class="col-12">
+              <label class="form-label small">Resultado obtido</label>
+              <textarea name="resultado_obtido" class="form-control" rows="3"
+                        placeholder="Descreva o que foi realizado...">{{ acao.resultado_obtido }}</textarea>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-lg me-1"></i>Salvar status
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  {# Coluna lateral #}
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold">Detalhes</h6>
+      </div>
+      <div class="card-body">
+        <dl class="row small mb-0">
+          <dt class="col-5 text-muted">Jornada</dt>
+          <dd class="col-7">
+            <a href="{% url 'bem_estar_animal:detalhe_jornada' acao.jornada.pk %}" class="text-success text-decoration-none">
+              {{ acao.jornada.nome|truncatechars:35 }}
+            </a>
+          </dd>
+
+          <dt class="col-5 text-muted">Responsável</dt>
+          <dd class="col-7">
+            {% if acao.responsavel %}
+              {{ acao.responsavel.get_full_name|default:acao.responsavel.username }}
+            {% else %}
+              <span class="text-muted">Não definido</span>
+            {% endif %}
+          </dd>
+
+          <dt class="col-5 text-muted">Prazo</dt>
+          <dd class="col-7">
+            {{ acao.prazo|date:"d/m/Y" }}
+            {% if acao.dias_ate_prazo is not None %}
+              {% if acao.esta_atrasada %}
+                <span class="text-danger">
+                  ({{ acao.dias_ate_prazo|add:0|default:acao.dias_ate_prazo }} dias atraso)
+                </span>
+              {% else %}
+                <span class="text-muted">({{ acao.dias_ate_prazo }}d restantes)</span>
+              {% endif %}
+            {% endif %}
+          </dd>
+
+          {% if acao.visita_origem %}
+          <dt class="col-5 text-muted">Visita origem</dt>
+          <dd class="col-7">
+            <a href="{% url 'bem_estar_animal:detalhe_visita' acao.visita_origem.pk %}" class="text-success text-decoration-none">
+              {{ acao.visita_origem.data_visita|date:"d/m/Y" }}
+            </a>
+          </dd>
+          {% endif %}
+
+          {% if acao.data_conclusao %}
+          <dt class="col-5 text-muted">Concluída em</dt>
+          <dd class="col-7">{{ acao.data_conclusao|date:"d/m/Y" }}</dd>
+          {% endif %}
+
+          <dt class="col-5 text-muted">Criada em</dt>
+          <dd class="col-7">{{ acao.criado_em|date:"d/m/Y" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

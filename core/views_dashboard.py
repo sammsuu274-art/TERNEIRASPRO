@@ -324,9 +324,10 @@ def _status_desempenho(prop, inicio_periodo, hoje):
     from eventos.models import Parto
     from indicadores.services import calcular_gmd
 
+    # Incluir terneira E novilha (terneira após desaleitamento)
     n_terneiras_ativas = Animal.objects.filter(
         propriedade=prop,
-        categoria__in=['terneira'],
+        categoria__in=['terneira', 'novilha'],
         situacao='ativa',
         sexo='F',
     ).count()
@@ -351,12 +352,12 @@ def _status_desempenho(prop, inicio_periodo, hoje):
 
     n_machos = n_nascimentos - n_femeas
 
-    # GMD médio no aleitamento
+    # GMD médio no aleitamento — inclui terneira E novilha (que já foi terneira)
     from eventos.models import Desaleitamento
     gmds = []
     terneiras_aleitamento = Animal.objects.filter(
         propriedade=prop,
-        categoria='terneira',
+        categoria__in=['terneira', 'novilha'],
         situacao='ativa',
         sexo='F',
     ).prefetch_related('pesagens')

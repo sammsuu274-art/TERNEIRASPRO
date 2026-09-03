@@ -66,9 +66,10 @@ python manage.py runserver
 ### 1.4 Ler Documentação
 
 **Ordem de leitura obrigatória:**
-1. `DOCUMENTACAO_AGENTE.md` — Especificação completa do sistema
-2. `ESPECIFICACAO_TECNICA_COMPLETA.md` — Visão técnica para developers
-3. `AUDITORIA_PRODUCAO.md` — Checklist pré-deploy
+1. `LEIA_PRIMEIRO.md` — Navegação (você está aqui)
+2. `DOCUMENTACAO_AGENTE.md` — Especificação completa (FONTE OFICIAL)
+3. `GUIA_IMPLEMENTACAO_PARA_EQUIPE.md` — Para developers
+4. `AUDITORIA_PRODUCAO.md` — Checklist pré-deploy
 
 **Documentos complementares:**
 - `IMPLEMENTACAO_LOGIN.md` — Design da tela de login
@@ -731,7 +732,7 @@ git push -u origin main
 ANTES DE COMEÇAR:
 ☐ Clonar repositório
 ☐ Setup venv + pip install
-☐ Ler documentação (DOCUMENTACAO_AGENTE.md, ESPECIFICACAO_TECNICA_COMPLETA.md)
+☐ Ler documentação (LEIA_PRIMEIRO.md → DOCUMENTACAO_AGENTE.md)
 ☐ python manage.py runserver funciona
 
 CORRIGIR BUGS:

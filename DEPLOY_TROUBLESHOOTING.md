@@ -61,7 +61,7 @@ project_home = '/home/seu_username/TerneirasPro'
 **Se arquivo não existe:**
 1. Ir para **Web → Web app → Code**
 2. Clicar em link do arquivo WSGI
-3. Copiar conteúdo correto (ver DEPLOYMENT_PYTHONANYWHERE.md passo 9)
+3. Copiar conteúdo correto (ver GUIA_IMPLEMENTACAO_PARA_EQUIPE.md seção 5)
 4. Salvar
 
 **Passo 2: Verificar error log**

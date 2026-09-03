@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+          <h4 class="mb-0"><i class="bi bi-house-fill me-2"></i>{{ titulo }}</h4>
+        </div>
+        <div class="card-body">
+          {% if terneira %}
+          <div class="alert alert-info">
+            <strong>Terneira:</strong> {{ terneira.identificacao }} - {{ terneira.raca }}
+          </div>
+          {% endif %}
+
+          <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Data da Avaliação</label>
+                {{ form.data_avaliacao }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Local de Parição</label>
+                {{ form.local_paricao }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Tipo de Alojamento</label>
+                {{ form.tipo_alojamento }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Dimensão da Baia (m²)</label>
+                {{ form.dimensao_baia_m2 }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Profundidade da Cama (cm)</label>
+                {{ form.profundidade_cama_cm }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Tipo de Cama</label>
+                {{ form.tipo_cama }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Idade Primeira Mamada (h)</label>
+                {{ form.idade_primeira_mamada_h }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Volume Colostro (L)</label>
+                {{ form.volume_colostro_l }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Acesso à Água</label>
+                {{ form.acesso_agua }}
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Acesso a Concentrado</label>
+                {{ form.acesso_concentrado }}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label">Observações</label>
+                {{ form.observacoes }}
+              </div>
+            </div>
+
+            {{ form.terneira.as_hidden }}
+
+            <div class="mt-4 d-flex gap-2">
+              <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-lg me-1"></i>Salvar
+              </button>
+              <a href="{% url 'bem_estar_animal:lista_ambiente' %}" class="btn btn-secondary">
+                <i class="bi bi-x-lg me-1"></i>Cancelar
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }}{% endblock %}
+{% block nav_bea_planos %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-1">
+        <li class="breadcrumb-item"><a href="{% url 'bem_estar_animal:lista_planos_acao' %}" class="text-success">Plano de Ação</a></li>
+        {% if acao %}
+        <li class="breadcrumb-item"><a href="{% url 'bem_estar_animal:detalhe_plano_acao' acao.pk %}" class="text-success">{{ acao.indicador|truncatechars:30 }}</a></li>
+        {% endif %}
+        <li class="breadcrumb-item active">{{ titulo }}</li>
+      </ol>
+    </nav>
+    <h4 class="fw-bold mb-0">{{ titulo }}</h4>
+  </div>
+  {% if acao %}
+  <a href="{% url 'bem_estar_animal:detalhe_plano_acao' acao.pk %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Voltar
+  </a>
+  {% else %}
+  <a href="{% url 'bem_estar_animal:lista_planos_acao' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Voltar
+  </a>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      {# Seção: Identificação #}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-tag me-2 text-success"></i>Identificação</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label">{{ form.jornada.label }}</label>
+              {{ form.jornada }}
+              {% if form.jornada.errors %}<div class="text-danger small mt-1">{{ form.jornada.errors }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">{{ form.dominio.label }}</label>
+              {{ form.dominio }}
+              {% if form.dominio.errors %}<div class="text-danger small mt-1">{{ form.dominio.errors }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.indicador.label }}</label>
+              {{ form.indicador }}
+              {% if form.indicador.errors %}<div class="text-danger small mt-1">{{ form.indicador.errors }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Seção: Problema e Ação #}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-exclamation-circle me-2 text-warning"></i>Problema e Ação</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">{{ form.situacao_encontrada.label }}</label>
+              {{ form.situacao_encontrada }}
+              {% if form.situacao_encontrada.errors %}<div class="text-danger small mt-1">{{ form.situacao_encontrada.errors }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.acao_recomendada.label }}</label>
+              {{ form.acao_recomendada }}
+              {% if form.acao_recomendada.errors %}<div class="text-danger small mt-1">{{ form.acao_recomendada.errors }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Seção: Controle #}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-sliders me-2 text-primary"></i>Controle</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-4">
+              <label class="form-label">{{ form.prioridade.label }}</label>
+              {{ form.prioridade }}
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">{{ form.prazo.label }}</label>
+              {{ form.prazo }}
+              {% if form.prazo.errors %}<div class="text-danger small mt-1">{{ form.prazo.errors }}</div>{% endif %}
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">{{ form.responsavel.label }}</label>
+              {{ form.responsavel }}
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">{{ form.status.label }}</label>
+              {{ form.status }}
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">{{ form.data_conclusao.label }}</label>
+              {{ form.data_conclusao }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Seção: Resultado e Observações #}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0 fw-semibold"><i class="bi bi-chat-left-text me-2 text-secondary"></i>Resultado e Observações</h6>
+        </div>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">{{ form.resultado_obtido.label }}</label>
+              {{ form.resultado_obtido }}
+            </div>
+            <div class="col-12">
+              <label class="form-label">{{ form.observacoes.label }}</label>
+              {{ form.observacoes }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-success px-4">
+          <i class="bi bi-check-lg me-1"></i>Salvar
+        </button>
+        {% if acao %}
+        <a href="{% url 'bem_estar_animal:detalhe_plano_acao' acao.pk %}" class="btn btn-outline-secondary">Cancelar</a>
+        {% else %}
+        <a href="{% url 'bem_estar_animal:lista_planos_acao' %}" class="btn btn-outline-secondary">Cancelar</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

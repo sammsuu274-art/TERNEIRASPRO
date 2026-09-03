@@ -8,6 +8,7 @@ from indicadores.services import (
     calcular_gmd, calcular_gmd_periodo, classificar_peso_vs_meta,
     projetar_data_reprodutiva, classificar_trajetoria,
 )
+from core.decorators import admin_ou_tecnico
 
 
 def _prop(request):
@@ -322,6 +323,7 @@ def lista_aptas_reproducao(request):
     })
 
 
+@admin_ou_tecnico
 def registrar_cobertura_ia(request, terneira_pk):
     prop = _prop(request)
     terneira = get_object_or_404(Animal, pk=terneira_pk, propriedade=prop)

@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'programas',
     'config_tecnica',
     'indicadores',
+    'bem_estar_animal',  # Fase 1 - BEA
 ]
 
 MIDDLEWARE = [

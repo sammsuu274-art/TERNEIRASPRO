@@ -83,7 +83,7 @@ python manage.py runserver
 
 ### Para Desenvolvedores
 - [`GUIA_IMPLEMENTACAO_PARA_EQUIPE.md`](./GUIA_IMPLEMENTACAO_PARA_EQUIPE.md) — Setup, bugs prioritários, testes, deploy
-- [`ESPECIFICACAO_TECNICA_COMPLETA.md`](./ESPECIFICACAO_TECNICA_COMPLETA.md) — Arquitetura, modelos, funcionalidades
+- [`DOCUMENTACAO_AGENTE.md`](./DOCUMENTACAO_AGENTE.md) — Arquitetura, modelos, funcionalidades (FONTE OFICIAL)
 - [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md) — Checklist pré-deploy, segurança
 
 ### Referência Técnica
@@ -242,7 +242,7 @@ Veja [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md) para detalhes e soluçõ
 - ✅ Primeiro acesso automático
 - ✅ Admin do sistema
 
-Veja [`ESPECIFICACAO_TECNICA_COMPLETA.md`](./ESPECIFICACAO_TECNICA_COMPLETA.md) para lista completa.
+Veja [`DOCUMENTACAO_AGENTE.md`](./DOCUMENTACAO_AGENTE.md) para lista completa.
 
 ---
 

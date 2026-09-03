@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Detalhes - Comportamento{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-lg-8 mx-auto">
+      <div class="card shadow-sm">
+        <div class="card-header bg-info text-white">
+          <h4 class="mb-0"><i class="bi bi-emoji-smile-fill me-2"></i>Avaliação de Comportamento</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-sm-4">Terneira:</dt>
+            <dd class="col-sm-8">{{ comportamento.terneira.identificacao }}</dd>
+
+            <dt class="col-sm-4">Data:</dt>
+            <dd class="col-sm-8">{{ comportamento.data_avaliacao|date:"d/m/Y" }}</dd>
+
+            <dt class="col-sm-4">Estímulo 6h:</dt>
+            <dd class="col-sm-8">{{ comportamento.get_estimulo_6h_pos_nascimento_display|default:"-" }}</dd>
+
+            <dt class="col-sm-4">Idade Mocação:</dt>
+            <dd class="col-sm-8">{{ comportamento.idade_mocacao_semanas|default:"-" }} semanas</dd>
+
+            <dt class="col-sm-4">Observações:</dt>
+            <dd class="col-sm-8">{{ comportamento.observacoes|default:"-" }}</dd>
+          </dl>
+
+          <div class="mt-4">
+            <a href="{% url 'bem_estar_animal:lista_comportamento' %}" class="btn btn-secondary">
+              <i class="bi bi-arrow-left me-1"></i>Voltar
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

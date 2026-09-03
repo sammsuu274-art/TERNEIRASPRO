@@ -8,6 +8,7 @@ Não sobrescreve critérios já existentes.
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import timezone
+from datetime import date
 
 
 CRITERIOS_PADRAO = [
@@ -41,10 +42,10 @@ CRITERIOS_PADRAO = [
     # Umbigo — tempo até 1ª cura
     {
         'codigo': 'umbigo_tempo',
-        'valor_limite': 1.0,
+        'valor_limite': 6.0,
         'unidade': 'horas',
         'escopo_raca': 'todas',
-        'descricao_custom': 'Cura do umbigo em até 1 hora após o nascimento',
+        'descricao_custom': 'Cura do umbigo em até 6 horas após o nascimento',
         'indicador_ref': None,
     },
     # Dias secos — mínimo

@@ -14,6 +14,7 @@ urlpatterns = [
     path('', include('core.urls_dashboard')),
     path('dashboard/', include('core.urls_dashboard')),
     path('core/', include('core.urls', namespace='core')),
+    path('bea/', include('bem_estar_animal.urls', namespace='bem_estar_animal')),
 ]
 
 if settings.DEBUG:

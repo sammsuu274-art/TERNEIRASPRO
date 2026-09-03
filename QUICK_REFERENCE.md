@@ -402,7 +402,7 @@ CSRF_TRUSTED_ORIGINS=https://terneiraspro.onrender.com
 |---|---|
 | Começar | [`LEIA_PRIMEIRO.md`](./LEIA_PRIMEIRO.md) |
 | Implementação | [`GUIA_IMPLEMENTACAO_PARA_EQUIPE.md`](./GUIA_IMPLEMENTACAO_PARA_EQUIPE.md) |
-| Arquitetura | [`ESPECIFICACAO_TECNICA_COMPLETA.md`](./ESPECIFICACAO_TECNICA_COMPLETA.md) |
+| Arquitetura | [`DOCUMENTACAO_AGENTE.md`](./DOCUMENTACAO_AGENTE.md) |
 | Deploy | [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md) |
 | Bugs | [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md#14-problemas-conhecidos-e-pendências) |
 | Problemas | [`TROUBLESHOOTING.md`](./TROUBLESHOOTING.md) |

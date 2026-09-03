@@ -11,6 +11,7 @@ from .forms import (
     OcorrenciaSanitariaForm, EncerrarOcorrenciaForm,
     VacinacaoForm, DesaleitamentoForm, BancoColostroForm,
 )
+from core.decorators import papel_minimo_required, admin_only, admin_ou_tecnico
 
 
 def _prop(request):
@@ -23,6 +24,8 @@ def _get_terneira(request, pk):
 
 # ─── PARTO ────────────────────────────────────────────────────────────────────
 
+@login_required
+@admin_ou_tecnico
 def registrar_parto(request, ciclo_pk):
     prop = _prop(request)
     ciclo = get_object_or_404(CicloReprodutivo, pk=ciclo_pk, vaca__propriedade=prop)
@@ -88,14 +91,16 @@ def registrar_parto(request, ciclo_pk):
 
 # ─── COLOSTRAGEM ─────────────────────────────────────────────────────────────
 
+@login_required
+@papel_minimo_required('admin', 'tecnico', 'produtor', 'auxiliar')
 def registrar_colostragem(request, terneira_pk):
     prop = _prop(request)
     terneira = _get_terneira(request, terneira_pk)
 
     # Calcular meta de volume (10% do peso vivo)
     meta_volume = None
-    if hasattr(terneira, 'parto_origem') and terneira.parto_origem and terneira.parto_origem.peso_kg:
-        meta_volume = int(terneira.parto_origem.peso_kg * 100)  # 10% convertido para ml
+    if hasattr(terneira, 'parto_origem') and terneira.parto_origem and terneira.parto_origem.peso_nascimento:
+        meta_volume = int(terneira.parto_origem.peso_nascimento * 100)  # 10% convertido para ml
     elif terneira.pesagens.exists():
         primeira_pesagem = terneira.pesagens.order_by('data').first()
         if primeira_pesagem.peso_kg:
@@ -129,6 +134,8 @@ def registrar_colostragem(request, terneira_pk):
     })
 
 
+@login_required
+@admin_ou_tecnico
 def editar_colostragem(request, pk):
     """Permite edição limitada de colostragem com recálculo de conformidades."""
     prop = _prop(request)
@@ -177,6 +184,8 @@ def lista_colostragens(request, terneira_pk):
     })
 
 
+@login_required
+@admin_only
 def excluir_colostragem(request, pk):
     """Permite exclusão de colostragem com confirmação."""
     prop = _prop(request)
@@ -207,6 +216,8 @@ def excluir_colostragem(request, pk):
 
 # ─── UMBIGO ───────────────────────────────────────────────────────────────────
 
+@login_required
+@papel_minimo_required('admin', 'tecnico', 'produtor', 'auxiliar')
 def registrar_cura_umbigo(request, terneira_pk):
     terneira = _get_terneira(request, terneira_pk)
 
@@ -237,6 +248,8 @@ def registrar_cura_umbigo(request, terneira_pk):
 
 # ─── PESAGEM ──────────────────────────────────────────────────────────────────
 
+@login_required
+@papel_minimo_required('admin', 'tecnico', 'produtor', 'auxiliar')
 def registrar_pesagem(request, animal_pk):
     prop = _prop(request)
     animal = get_object_or_404(Animal, pk=animal_pk, propriedade=prop)
@@ -277,6 +290,8 @@ def historico_pesagens(request, animal_pk):
     })
 
 
+@login_required
+@admin_only
 def excluir_pesagem(request, pk):
     """Permite exclusão de pesagem com confirmação."""
     prop = _prop(request)
@@ -310,6 +325,8 @@ def excluir_pesagem(request, pk):
 
 # ─── OCORRÊNCIA SANITÁRIA ─────────────────────────────────────────────────────
 
+@login_required
+@admin_ou_tecnico
 def registrar_ocorrencia(request, animal_pk):
     prop = _prop(request)
     animal = get_object_or_404(Animal, pk=animal_pk, propriedade=prop)
@@ -335,6 +352,8 @@ def registrar_ocorrencia(request, animal_pk):
     })
 
 
+@login_required
+@admin_ou_tecnico
 def encerrar_ocorrencia(request, pk):
     prop = _prop(request)
     oc = get_object_or_404(OcorrenciaSanitaria, pk=pk, animal__propriedade=prop)
@@ -354,6 +373,8 @@ def encerrar_ocorrencia(request, pk):
 
 # ─── VACINAÇÃO ────────────────────────────────────────────────────────────────
 
+@login_required
+@papel_minimo_required('admin', 'tecnico', 'produtor', 'auxiliar')
 def registrar_vacinacao(request, animal_pk):
     prop = _prop(request)
     animal = get_object_or_404(Animal, pk=animal_pk, propriedade=prop)
@@ -376,6 +397,8 @@ def registrar_vacinacao(request, animal_pk):
 
 # ─── DESALEITAMENTO ───────────────────────────────────────────────────────────
 
+@login_required
+@admin_ou_tecnico
 def registrar_desaleitamento(request, terneira_pk):
     terneira = _get_terneira(request, terneira_pk)
 
@@ -404,6 +427,7 @@ def registrar_desaleitamento(request, terneira_pk):
 
 # ─── BANCO DE COLOSTRO ────────────────────────────────────────────────────────
 
+@login_required
 def lista_banco_colostro(request):
     prop = _prop(request)
     if not prop:
@@ -412,6 +436,8 @@ def lista_banco_colostro(request):
     return render(request, 'eventos/lista_banco_colostro.html', {'banco': banco})
 
 
+@login_required
+@papel_minimo_required('admin', 'tecnico', 'produtor', 'auxiliar')
 def novo_banco_colostro(request):
     prop = _prop(request)
     if request.method == 'POST':
@@ -433,6 +459,8 @@ def novo_banco_colostro(request):
 
 # ─── MOVIMENTAÇÃO DE LOTES ─────────────────────────────────────────────────────
 
+@login_required
+@papel_minimo_required('admin', 'tecnico', 'produtor')
 def mover_animal_lote(request, animal_pk):
     """Permite movimentar animal entre lotes."""
     prop = _prop(request)
@@ -471,7 +499,8 @@ def mover_animal_lote(request, animal_pk):
     })
 
 
-@login_required 
+@login_required
+@papel_minimo_required('admin', 'tecnico', 'produtor', 'auxiliar')
 def registrar_pesagem_complementar(request, animal_pk):
     """Formulário com medições complementares opcionais."""
     prop = _prop(request)

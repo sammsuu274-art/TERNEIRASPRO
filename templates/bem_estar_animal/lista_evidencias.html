@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Evidências BEA{% endblock %}
+{% block nav_bea_evidencias %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="bi bi-camera me-2 text-success"></i>Evidências</h4>
+    <p class="text-muted small mb-0">Fotos e vídeos do bem-estar animal</p>
+  </div>
+  <a href="{% url 'bem_estar_animal:nova_evidencia' %}" class="btn btn-success">
+    <i class="bi bi-plus-lg me-1"></i>Nova Evidência
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+
+{% if not evidencias_list %}
+<div class="card border-0 shadow-sm">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-camera fs-1 text-muted opacity-50"></i>
+    <p class="text-muted mt-3 mb-1">Nenhuma evidência registrada.</p>
+    <p class="text-muted small">
+      Evidências precisam de <a href="{% url 'bem_estar_animal:lista_consentimentos' %}">consentimento</a>
+      do produtor antes de serem cadastradas.
+    </p>
+    <a href="{% url 'bem_estar_animal:nova_evidencia' %}" class="btn btn-success mt-2">
+      <i class="bi bi-plus-lg me-1"></i>Cadastrar evidência
+    </a>
+  </div>
+</div>
+{% else %}
+
+<div class="row g-3">
+  {% for evidencia in evidencias_list %}
+  <div class="col-12 col-md-6 col-xl-4">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+
+        {# Cabeçalho #}
+        <div class="d-flex align-items-center gap-2 mb-2">
+          {% if evidencia.tipo_evidencia == 'foto' %}
+            <div class="kpi-icon bg-success bg-opacity-10">
+              <i class="bi bi-image text-success"></i>
+            </div>
+            <span class="badge text-bg-success">Foto</span>
+          {% elif evidencia.tipo_evidencia == 'video' %}
+            <div class="kpi-icon bg-primary bg-opacity-10">
+              <i class="bi bi-camera-video text-primary"></i>
+            </div>
+            <span class="badge text-bg-primary">Vídeo</span>
+          {% else %}
+            <div class="kpi-icon bg-secondary bg-opacity-10">
+              <i class="bi bi-file-earmark text-secondary"></i>
+            </div>
+            <span class="badge text-bg-secondary">{{ evidencia.get_tipo_evidencia_display }}</span>
+          {% endif %}
+          <span class="text-muted small ms-auto">{{ evidencia.data_upload|date:"d/m/Y" }}</span>
+        </div>
+
+        {# Descrição #}
+        <p class="small mb-2">{{ evidencia.descricao|default:"Sem descrição"|truncatechars:80 }}</p>
+
+        {# Vinculação #}
+        <div class="text-muted" style="font-size:.75rem;">
+          <i class="bi bi-link-45deg me-1"></i>{{ evidencia.objeto_vinculado_nome }}
+        </div>
+
+        {# Usuário #}
+        <div class="text-muted" style="font-size:.72rem;">
+          <i class="bi bi-person me-1"></i>{{ evidencia.usuario_upload.get_full_name|default:evidencia.usuario_upload.username }}
+        </div>
+
+      </div>
+      <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
+        <a href="{% url 'bem_estar_animal:detalhe_evidencia' evidencia.pk %}"
+           class="btn btn-sm btn-outline-primary w-100">
+          <i class="bi bi-eye me-1"></i>Ver detalhes
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endif %}
+{% endblock %}

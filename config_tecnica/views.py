@@ -5,6 +5,7 @@ from .models import (
     MetaReprodutiva, ReferencialTecnico, CriterioConformidade,
 )
 from .forms import ProtocoloForm, MetaDesenvolvimentoForm, MetaReprodutivaForm, CriterioConformidadeForm
+from core.decorators import admin_ou_tecnico
 
 
 def _prop(request):
@@ -31,6 +32,7 @@ def lista_protocolos(request):
     return render(request, 'config_tecnica/lista_protocolos.html', {'protocolos': protocolos})
 
 
+@admin_ou_tecnico
 def novo_protocolo(request):
     prop = _prop(request)
     if request.method == 'POST':
@@ -53,6 +55,7 @@ def lista_metas(request):
     return render(request, 'config_tecnica/lista_metas.html', {'metas': metas})
 
 
+@admin_ou_tecnico
 def nova_meta(request):
     prop = _prop(request)
     if request.method == 'POST':
@@ -100,6 +103,7 @@ def lista_metas_reprodutivas(request):
     return render(request, 'config_tecnica/lista_metas_reprodutivas.html', {'metas': metas})
 
 
+@admin_ou_tecnico
 def nova_meta_reprodutiva(request):
     prop = _prop(request)
     if request.method == 'POST':
@@ -128,6 +132,7 @@ def lista_criterios(request):
     return render(request, 'config_tecnica/lista_criterios.html', {'criterios': criterios})
 
 
+@admin_ou_tecnico
 def novo_criterio(request):
     prop = _prop(request)
     if request.method == 'POST':
@@ -146,6 +151,7 @@ def novo_criterio(request):
     return render(request, 'config_tecnica/form_criterio.html', {'form': form, 'titulo': 'Novo Critério'})
 
 
+@admin_ou_tecnico
 def editar_criterio(request, pk):
     prop = _prop(request)
     criterio = get_object_or_404(CriterioConformidade, pk=pk, propriedade=prop)

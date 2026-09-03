@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}Visita — {{ visita.data_visita|date:"d/m/Y" }}{% endblock %}
+{% block nav_bea_visitas %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-start justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-1">
+        <li class="breadcrumb-item"><a href="{% url 'bem_estar_animal:lista_visitas' %}" class="text-success">Visitas</a></li>
+        <li class="breadcrumb-item active">{{ visita.data_visita|date:"d/m/Y" }}</li>
+      </ol>
+    </nav>
+    <h4 class="fw-bold mb-1">
+      Visita {% if visita.numero_visita %}Nº {{ visita.numero_visita }} — {% endif %}{{ visita.data_visita|date:"d/m/Y" }}
+    </h4>
+    <div class="d-flex gap-2 flex-wrap">
+      {% if visita.tipo_visita == 'baseline' %}
+        <span class="badge text-bg-info text-dark">Baseline / Diagnóstico Inicial</span>
+      {% elif visita.tipo_visita == 'acompanhamento' %}
+        <span class="badge text-bg-primary">Acompanhamento</span>
+      {% elif visita.tipo_visita == 'reavaliacao' %}
+        <span class="badge text-bg-warning text-dark">Reavaliação</span>
+      {% elif visita.tipo_visita == 'final' %}
+        <span class="badge text-bg-success">Visita Final</span>
+      {% endif %}
+      {% if visita.jornada %}
+        <a href="{% url 'bem_estar_animal:detalhe_jornada' visita.jornada.pk %}"
+           class="badge text-bg-light border text-success text-decoration-none">
+          <i class="bi bi-map me-1"></i>{{ visita.jornada.nome|truncatechars:35 }}
+        </a>
+      {% endif %}
+    </div>
+  </div>
+  <a href="{% url 'bem_estar_animal:lista_visitas' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Voltar
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+
+  {# Coluna principal #}
+  <div class="col-12 col-lg-8">
+
+    {# Participantes #}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-people me-2 text-success"></i>Participantes</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <div class="text-muted small">Responsável técnico</div>
+            <div class="fw-semibold">
+              {{ visita.responsavel_tecnico.get_full_name|default:visita.responsavel_tecnico.username }}
+            </div>
+          </div>
+          {% if visita.produtor_visitado %}
+          <div class="col-12 col-md-6">
+            <div class="text-muted small">Produtor visitado</div>
+            <div class="fw-semibold">
+              {{ visita.produtor_visitado.get_full_name|default:visita.produtor_visitado.username }}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    {# Conteúdo da visita #}
+    {% if visita.problemas_identificados %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Problemas identificados</h6>
+      </div>
+      <div class="card-body">
+        <p class="mb-0">{{ visita.problemas_identificados }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if visita.acoes_recomendadas %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-check2-square me-2 text-success"></i>Ações recomendadas</h6>
+      </div>
+      <div class="card-body">
+        <p class="mb-0">{{ visita.acoes_recomendadas }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if visita.observacoes_gerais %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-chat-left-text me-2 text-secondary"></i>Observações gerais</h6>
+      </div>
+      <div class="card-body">
+        <p class="mb-0 text-muted">{{ visita.observacoes_gerais }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    {# Ações geradas por esta visita #}
+    {% with acoes=visita.acoes_geradas.all %}
+    {% if acoes %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold">
+          <i class="bi bi-clipboard-check me-2 text-primary"></i>
+          Ações geradas por esta visita
+          <span class="badge text-bg-primary ms-1">{{ acoes.count }}</span>
+        </h6>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for acao in acoes %}
+        <a href="{% url 'bem_estar_animal:detalhe_plano_acao' acao.pk %}"
+           class="list-group-item list-group-item-action py-2 px-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="fw-semibold small">{{ acao.indicador }}</span>
+              <span class="badge bg-secondary ms-1" style="font-size:.65rem;">{{ acao.dominio }}</span>
+            </div>
+            <div>
+              {% if acao.status == 'pendente' %}
+                <span class="badge text-bg-secondary" style="font-size:.65rem;">Pendente</span>
+              {% elif acao.status == 'em_andamento' %}
+                <span class="badge text-bg-primary" style="font-size:.65rem;">Em andamento</span>
+              {% elif acao.status == 'concluido' %}
+                <span class="badge text-bg-success" style="font-size:.65rem;">Concluída</span>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+
+  </div>
+
+  {# Coluna lateral #}
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold">Detalhes</h6>
+      </div>
+      <div class="card-body">
+        <dl class="row small mb-0">
+          <dt class="col-5 text-muted">Propriedade</dt>
+          <dd class="col-7">{{ visita.propriedade.nome }}</dd>
+
+          <dt class="col-5 text-muted">Data</dt>
+          <dd class="col-7">{{ visita.data_visita|date:"d/m/Y" }}</dd>
+
+          {% if visita.numero_visita %}
+          <dt class="col-5 text-muted">Número</dt>
+          <dd class="col-7">{{ visita.numero_visita }}ª visita</dd>
+          {% endif %}
+
+          {% if visita.jornada %}
+          <dt class="col-5 text-muted">Jornada</dt>
+          <dd class="col-7">
+            <a href="{% url 'bem_estar_animal:detalhe_jornada' visita.jornada.pk %}" class="text-success text-decoration-none">
+              {{ visita.jornada.nome|truncatechars:30 }}
+            </a>
+          </dd>
+          <dt class="col-5 text-muted">Progresso</dt>
+          <dd class="col-7 text-muted">
+            {{ visita.jornada.total_visitas }}/{{ visita.jornada.minimo_visitas }} visitas
+          </dd>
+          {% endif %}
+
+          <dt class="col-5 text-muted">Registrada em</dt>
+          <dd class="col-7">{{ visita.criada_em|date:"d/m/Y H:i" }}</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

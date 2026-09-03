@@ -1,0 +1,129 @@
+═══════════════════════════════════════════════════════════════════════════════
+🚀 INÍCIO RÁPIDO — TerneirasPro com Dados Completos
+═══════════════════════════════════════════════════════════════════════════════
+
+DATA:       29 de Agosto de 2026
+REGISTROS:  198 lançamentos
+TERNEIRAS:  7 (de 2 a 6 meses)
+HISTÓRICO:  6 meses de dados
+STATUS:     ✅ PRONTO PARA TESTES
+
+───────────────────────────────────────────────────────────────────────────────
+1️⃣  INICIAR SERVIDOR
+───────────────────────────────────────────────────────────────────────────────
+
+    cd ~/Documentos/victor/Documentos/TERNEIRAS
+    ./iniciar_servidor.sh
+
+Esperar por:
+    Starting development server at http://127.0.0.1:8000
+
+───────────────────────────────────────────────────────────────────────────────
+2️⃣  ACESSAR SISTEMA
+───────────────────────────────────────────────────────────────────────────────
+
+    URL:      http://127.0.0.1:8000
+    Login:    admin
+    Senha:    admin123
+
+───────────────────────────────────────────────────────────────────────────────
+3️⃣  EXPLORAR DADOS
+───────────────────────────────────────────────────────────────────────────────
+
+DASHBOARD (página inicial):
+    ✅ 7 KPIs de conformidade
+    ✅ Alertas críticos e operacionais
+    ✅ 4 gráficos de 6 meses
+    ✅ Indicadores de desempenho
+
+TERNEIRAS (Menu → Rebanho → Terneiras):
+    ✅ 7 terneiras com históricos
+    ✅ Grupo 1: T-101-H, T-102-H, T-103-J (2-3 meses)
+    ✅ Grupo 2: T-104-H, T-105-H, T-106-J, T-107-G (5-6 meses)
+
+PROGRAMAS (Menu → Programas → Acompanhamento):
+    ✅ 7 programas encerrados com checkpoints
+    ✅ Trajetórias: 3 favorável, 2 atenção, 2 desfavorável
+
+APTAS À REPRODUÇÃO (Menu → Programas → Aptas à Reprodução):
+    ✅ 3 terneiras prontas para IA
+    ✅ 2 terneiras em atenção
+    ✅ 2 terneiras questionáveis
+
+BANCO DE COLOSTRO:
+    ✅ 3 lotes rastreados com doadora e Brix
+
+───────────────────────────────────────────────────────────────────────────────
+📊 DADOS DISPONÍVEIS
+───────────────────────────────────────────────────────────────────────────────
+
+ANIMAIS:
+    • 7 Vacas matrizes
+    • 7 Terneiras/Novilhas
+
+EVENTOS:
+    • 7 Partos
+    • 28 Colostragens
+    • 28 Cura de umbigo
+    • 42 Pesagens (6 por terneira, 6 meses)
+    • 20 Ocorrências sanitárias
+    • 28 Vacinações
+    • 7 Desaleitamentos
+    • 21 Movimentações de lotes
+
+PROGRAMAS:
+    • 7 Programas de acompanhamento (todos encerrados)
+    • 7 Checkpoints aos 180 dias
+    • 7 Projeções reprodutivas
+
+CONFORMIDADES:
+    • 7 Critérios (C1-C7) todos calculados
+    • ~98 resultados de conformidade
+
+───────────────────────────────────────────────────────────────────────────────
+🎯 CENÁRIOS TESTÁVEIS
+───────────────────────────────────────────────────────────────────────────────
+
+CENÁRIO BOM (3 terneiras):
+    ✅ T-101-H (2.6m):   Excelente desenvolvimento
+    ✅ T-104-H (5.9m):   Checkpoint favorável
+    ✅ T-106-J (5.8m):   Trajetória favorável
+
+CENÁRIO MÉDIO (2 terneiras):
+    ⚠️ T-102-H (2.5m):   Desenvolvimento normal
+    ⚠️ T-105-H (5.8m):   Checkpoint atenção
+
+CENÁRIO RUIM (2 terneiras):
+    🔴 T-103-J (2.3m):   Problemas de manejo
+    🔴 T-107-G (5.7m):   Trajetória desfavorável
+
+───────────────────────────────────────────────────────────────────────────────
+✅ FUNCIONALIDADES TESTÁVEIS
+───────────────────────────────────────────────────────────────────────────────
+
+[  ] Dashboard com KPIs reais
+[  ] Gráficos de 6 meses
+[  ] Terneiras com histórico completo
+[  ] Gráficos de peso vs meta
+[  ] Conformidades automáticas (C1-C7)
+[  ] Checkpoints aos 180 dias
+[  ] Trajetória reprodutiva
+[  ] Projeção com GMD
+[  ] Movimentação de lotes
+[  ] Alertas funcionando
+[  ] Filtros e busca
+[  ] Aptas à reprodução
+[  ] Banco de colostro
+
+───────────────────────────────────────────────────────────────────────────────
+📚 DOCUMENTAÇÃO
+───────────────────────────────────────────────────────────────────────────────
+
+CARGA_COMPLETA_FINAL.md     - Detalhes de todos os dados
+DEMO_GRAVACAO.md            - Roteiro de apresentação
+AUDITORIA_CARGA.md          - Verificação técnica
+STATUS_CARGA_DEMONSTRACAO.md - Checklist pronto
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ 198 REGISTROS | 7 TERNEIRAS | 6 MESES DE HISTÓRICO | PRONTO PARA TESTES
+═══════════════════════════════════════════════════════════════════════════════

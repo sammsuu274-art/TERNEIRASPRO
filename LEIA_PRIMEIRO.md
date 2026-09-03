@@ -14,12 +14,13 @@ Se você vai implementar melhorias ou corrigir bugs, siga esta ordem:
    - Testes
    - Deploy
 
-2. **Documentação técnica:** [`ESPECIFICACAO_TECNICA_COMPLETA.md`](./ESPECIFICACAO_TECNICA_COMPLETA.md)
+2. **Documentação técnica:** [`DOCUMENTACAO_AGENTE.md`](./DOCUMENTACAO_AGENTE.md)
    - Arquitetura do sistema
    - Modelos de dados
    - Todas as 47 funcionalidades
    - Stack tecnológico
    - Decisões de design
+   - Estado atual e pendências
 
 3. **Checklist pré-deploy:** [`AUDITORIA_PRODUCAO.md`](./AUDITORIA_PRODUCAO.md)
    - Segurança (SECRET_KEY, headers, SSL)
@@ -80,9 +81,9 @@ LEIA_PRIMEIRO.md                          ← Você está aqui
 │
 ├── Para Desenvolvedores:
 │   ├── GUIA_IMPLEMENTACAO_PARA_EQUIPE.md  (START HERE)
-│   ├── ESPECIFICACAO_TECNICA_COMPLETA.md  (REFERÊNCIA)
+│   ├── DOCUMENTACAO_AGENTE.md             (REFERÊNCIA TÉCNICA COMPLETA)
 │   ├── AUDITORIA_PRODUCAO.md              (CHECKLIST PRÉ-DEPLOY)
-│   └── DOCUMENTACAO_AGENTE.md             (TÉCNICA COMPLETA)
+│   └── TROUBLESHOOTING.md                 (SOLUÇÕES)
 │
 ├── Para Usuários:
 │   └── MANUAL_DO_USUARIO.md               (COMO USAR)
@@ -98,10 +99,8 @@ LEIA_PRIMEIRO.md                          ← Você está aqui
 │   ├── TELA_LOGIN_LAYOUT.md               (CSS DA LOGIN)
 │   └── SIMPLIFICACAO_DADOS.md             (FORMULÁRIOS)
 │
-├── Deploy (Histórico):
-│   ├── DEPLOYMENT_README.md
-│   ├── DEPLOYMENT_PYTHONANYWHERE.md
-│   └── ... (mais 7 arquivos de deployment)
+├── Deploy (Histórico — redundante, descontinuado):
+│   └── DEPLOY_TROUBLESHOOTING.md         (Problemas deployment legado)
 │
 └── Código:
     ├── gestao_terneiras/                  (Settings, URLs, WSGI)
@@ -195,9 +194,7 @@ Versionamento: GitHub
 
 | Arquivo | Público | Tamanho | Tempo de Leitura |
 |---|---|---|---|
-| DOCUMENTACAO_AGENTE.md | Tech | ~25 KB | 30 min |
-| GUIA_IMPLEMENTACAO_PARA_EQUIPE.md | Dev | ~20 KB | 20 min |
-| ESPECIFICACAO_TECNICA_COMPLETA.md | Dev/Arquiteto | ~35 KB | 45 min |
+| DOCUMENTACAO_AGENTE.md | Tech | ~75 KB | 60 min | Fonte oficial — Especificação técnica completa |
 | AUDITORIA_PRODUCAO.md | Dev/Ops | ~25 KB | 25 min |
 | MANUAL_DO_USUARIO.md | User | ~15 KB | 15 min |
 

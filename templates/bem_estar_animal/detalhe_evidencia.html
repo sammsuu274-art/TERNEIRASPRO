@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Evidência BEA{% endblock %}
+{% block nav_bea_evidencias %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-1">
+        <li class="breadcrumb-item"><a href="{% url 'bem_estar_animal:lista_evidencias' %}" class="text-success">Evidências</a></li>
+        <li class="breadcrumb-item active">Detalhe</li>
+      </ol>
+    </nav>
+    <h4 class="fw-bold mb-0">
+      <i class="bi bi-camera me-2 text-success"></i>
+      Evidência — {{ evidencia.get_tipo_evidencia_display }}
+    </h4>
+  </div>
+  <a href="{% url 'bem_estar_animal:lista_evidencias' %}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Voltar
+  </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 justify-content-center">
+  <div class="col-12 col-lg-8">
+
+    {# Arquivo #}
+    {% if evidencia.arquivo %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body text-center py-4">
+        {% if evidencia.tipo_evidencia == 'foto' %}
+          <img src="{{ evidencia.arquivo.url }}" alt="{{ evidencia.descricao }}"
+               class="img-fluid rounded" style="max-height:400px; object-fit:contain;">
+        {% elif evidencia.tipo_evidencia == 'video' %}
+          <video controls class="w-100 rounded" style="max-height:360px;">
+            <source src="{{ evidencia.arquivo.url }}">
+            Seu navegador não suporta vídeo.
+          </video>
+        {% else %}
+          <div class="py-4">
+            <i class="bi bi-file-earmark fs-1 text-muted"></i>
+            <p class="text-muted mt-2 mb-3">Arquivo disponível para download</p>
+            <a href="{{ evidencia.arquivo.url }}" class="btn btn-success" download>
+              <i class="bi bi-download me-1"></i>Baixar arquivo
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# Descrição #}
+    {% if evidencia.descricao %}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="form-section-title">Descrição</div>
+        <p class="mb-0">{{ evidencia.descricao }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-3">
+        <h6 class="mb-0 fw-semibold">Informações</h6>
+      </div>
+      <div class="card-body">
+        <dl class="row small mb-0">
+          <dt class="col-5 text-muted">Tipo</dt>
+          <dd class="col-7">{{ evidencia.get_tipo_evidencia_display }}</dd>
+
+          <dt class="col-5 text-muted">Vinculado a</dt>
+          <dd class="col-7">{{ evidencia.objeto_vinculado_nome }}</dd>
+
+          <dt class="col-5 text-muted">Enviada por</dt>
+          <dd class="col-7">
+            {{ evidencia.usuario_upload.get_full_name|default:evidencia.usuario_upload.username }}
+          </dd>
+
+          <dt class="col-5 text-muted">Data upload</dt>
+          <dd class="col-7">{{ evidencia.data_upload|date:"d/m/Y H:i" }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    {# Aviso de consentimento #}
+    <div class="alert alert-info mt-3 small d-flex gap-2">
+      <i class="bi bi-shield-check flex-shrink-0 mt-1"></i>
+      <span>
+        Esta evidência foi cadastrada após verificação de consentimento do produtor.
+        <a href="{% url 'bem_estar_animal:lista_consentimentos' %}" class="alert-link">Ver consentimentos</a>
+      </span>
+    </div>
+  </div>
+</div>
+{% endblock %}

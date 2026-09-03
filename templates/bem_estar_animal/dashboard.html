@@ -1,0 +1,297 @@
+{% extends 'base.html' %}
+{% block title %}Bem-Estar Animal{% endblock %}
+{% block nav_bea_dashboard %}active{% endblock %}
+
+{% block page_header %}
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="bi bi-heart-pulse-fill me-2 text-success"></i>Bem-Estar Animal</h4>
+    <p class="text-muted small mb-0">
+      Programa ProCampo — {{ propriedade.nome }}
+    </p>
+  </div>
+  {% if jornada_atual %}
+  <a href="{% url 'bem_estar_animal:detalhe_jornada' jornada_atual.pk %}" class="btn btn-success">
+    <i class="bi bi-map me-1"></i>Jornada ativa
+  </a>
+  {% else %}
+  <a href="{% url 'bem_estar_animal:lista_jornadas' %}" class="btn btn-outline-success">
+    <i class="bi bi-map me-1"></i>Ver jornadas
+  </a>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block content %}
+
+{# ══ ZONA 1 — Jornadas ═══════════════════════════════════════════════════ #}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-map me-1"></i>Jornadas ProCampo
+    </h6>
+  </div>
+
+  <div class="col-6 col-md-4 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_jornadas' %}" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value text-success">{{ jornadas_ativas }}</div>
+        <div class="kpi-label">Ativas</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card kpi-card p-3 h-100 text-center">
+      <div class="kpi-value text-muted">{{ jornadas_concluidas }}</div>
+      <div class="kpi-label">Concluídas</div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card kpi-card p-3 h-100 text-center">
+      <div class="kpi-value">{{ total_visitas }}</div>
+      <div class="kpi-label">Visitas realizadas</div>
+      <div class="text-muted" style="font-size:.7rem;">{{ visitas_baseline }} baseline · {{ visitas_acompanhamento }} acomp.</div>
+    </div>
+  </div>
+
+</div>
+
+{# ══ ZONA 2 — Plano de Ação ══════════════════════════════════════════════ #}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-clipboard-check me-1"></i>Plano de Ação
+    </h6>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_planos_acao' %}" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value">{{ total_acoes }}</div>
+        <div class="kpi-label">Total</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_planos_acao' %}?status=pendente" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value {% if acoes_pendentes > 0 %}text-warning{% else %}text-muted{% endif %}">
+          {{ acoes_pendentes }}
+        </div>
+        <div class="kpi-label">Pendentes</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_planos_acao' %}?status=em_andamento" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value text-primary">{{ acoes_andamento }}</div>
+        <div class="kpi-label">Em andamento</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_planos_acao' %}?status=concluido" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value text-success">{{ acoes_concluidas }}</div>
+        <div class="kpi-label">Concluídas</div>
+      </div>
+    </a>
+  </div>
+
+  {% if acoes_atrasadas > 0 %}
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_planos_acao' %}" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center border-danger border-2">
+        <div class="kpi-value text-danger">{{ acoes_atrasadas }}</div>
+        <div class="kpi-label text-danger">Atrasadas</div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+{# ══ ZONA 3 — Avaliações ═════════════════════════════════════════════════ #}
+<div class="row g-3 mb-4">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-grid me-1"></i>Avaliações registradas
+    </h6>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_ambiente' %}" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value text-primary">{{ total_ambiente }}</div>
+        <div class="kpi-label">Ambiente</div>
+        <div class="text-muted" style="font-size:.7rem;">
+          <i class="bi bi-house me-1"></i>Ver avaliações
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_comportamento' %}" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value text-info">{{ total_comportamento }}</div>
+        <div class="kpi-label">Comportamento</div>
+        <div class="text-muted" style="font-size:.7rem;">
+          <i class="bi bi-emoji-smile me-1"></i>Ver avaliações
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_evidencias' %}" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value text-success">{{ total_evidencias }}</div>
+        <div class="kpi-label">Evidências</div>
+        <div class="text-muted" style="font-size:.7rem;">
+          <i class="bi bi-camera me-1"></i>Ver evidências
+        </div>
+      </div>
+    </a>
+  </div>
+
+  <div class="col-6 col-md-3 col-xl-2">
+    <a href="{% url 'bem_estar_animal:lista_consentimentos' %}" class="text-decoration-none">
+      <div class="card kpi-card p-3 h-100 text-center">
+        <div class="kpi-value text-secondary">{{ total_consentimentos }}</div>
+        <div class="kpi-label">Consentimentos</div>
+        <div class="text-muted" style="font-size:.7rem;">
+          <i class="bi bi-file-text me-1"></i>Ver documentos
+        </div>
+      </div>
+    </a>
+  </div>
+
+</div>
+
+{# ══ ZONA 4 — Ações abertas recentes ════════════════════════════════════ #}
+{% if acoes_abertas_recentes %}
+<div class="row g-3 mb-4">
+  <div class="col-12 d-flex align-items-center justify-content-between">
+    <h6 class="text-muted text-uppercase fw-bold small mb-0">
+      <i class="bi bi-exclamation-circle me-1 text-warning"></i>Ações abertas mais próximas do prazo
+    </h6>
+    <a href="{% url 'bem_estar_animal:lista_planos_acao' %}?status=pendente" class="small text-success text-decoration-none">
+      Ver todas →
+    </a>
+  </div>
+
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="list-group list-group-flush">
+        {% for acao in acoes_abertas_recentes %}
+        <a href="{% url 'bem_estar_animal:detalhe_plano_acao' acao.pk %}"
+           class="list-group-item list-group-item-action py-3 px-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+            <div class="flex-grow-1">
+              <span class="fw-semibold small">{{ acao.indicador }}</span>
+              <span class="badge bg-secondary ms-1" style="font-size:.65rem;">{{ acao.dominio }}</span>
+              {% if acao.esta_atrasada %}
+                <span class="badge text-bg-danger ms-1" style="font-size:.65rem;">Atrasada</span>
+              {% endif %}
+              <div class="text-muted" style="font-size:.78rem;">
+                {{ acao.jornada.nome|truncatechars:50 }}
+              </div>
+            </div>
+            <div class="text-end text-muted" style="font-size:.75rem; white-space:nowrap;">
+              Prazo: {{ acao.prazo|date:"d/m/Y" }}
+              {% if acao.dias_ate_prazo is not None %}
+                {% if acao.esta_atrasada %}
+                  <br><span class="text-danger fw-semibold">Atrasada</span>
+                {% elif acao.dias_ate_prazo <= 7 %}
+                  <br><span class="text-warning fw-semibold">{{ acao.dias_ate_prazo }}d restantes</span>
+                {% else %}
+                  <br>{{ acao.dias_ate_prazo }}d restantes
+                {% endif %}
+              {% endif %}
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% elif total_acoes == 0 and jornadas_ativas == 0 %}
+
+{# Estado vazio — sem nenhuma jornada ativa #}
+<div class="card border-0 shadow-sm">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-heart-pulse fs-1 text-success opacity-50"></i>
+    <p class="text-muted mt-3 mb-1 fw-semibold">Bem-Estar Animal ainda sem dados</p>
+    <p class="text-muted small">
+      Para começar, crie uma jornada ProCampo para esta propriedade.
+    </p>
+    <a href="{% url 'bem_estar_animal:nova_jornada' %}" class="btn btn-success mt-2">
+      <i class="bi bi-plus-lg me-1"></i>Criar jornada ProCampo
+    </a>
+  </div>
+</div>
+
+{% endif %}
+
+{# ══ ZONA 5 — Acesso rápido ══════════════════════════════════════════════ #}
+<div class="row g-3 mt-1">
+  <div class="col-12">
+    <h6 class="text-muted text-uppercase fw-bold small mb-2">
+      <i class="bi bi-lightning me-1"></i>Acesso rápido
+    </h6>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2">
+        <span class="fw-semibold small">Módulos</span>
+      </div>
+      <div class="list-group list-group-flush">
+        <a href="{% url 'bem_estar_animal:lista_jornadas' %}" class="list-group-item list-group-item-action py-2">
+          <i class="bi bi-map me-2 text-success"></i><span class="small">Jornadas ProCampo</span>
+        </a>
+        <a href="{% url 'bem_estar_animal:lista_planos_acao' %}" class="list-group-item list-group-item-action py-2">
+          <i class="bi bi-clipboard-check me-2 text-primary"></i><span class="small">Plano de Ação</span>
+        </a>
+        <a href="{% url 'bem_estar_animal:lista_visitas' %}" class="list-group-item list-group-item-action py-2">
+          <i class="bi bi-calendar-event me-2 text-warning"></i><span class="small">Visitas Presenciais</span>
+        </a>
+        <a href="{% url 'bem_estar_animal:lista_consentimentos' %}" class="list-group-item list-group-item-action py-2">
+          <i class="bi bi-file-text me-2 text-secondary"></i><span class="small">Consentimentos</span>
+        </a>
+        <a href="{% url 'bem_estar_animal:lista_evidencias' %}" class="list-group-item list-group-item-action py-2">
+          <i class="bi bi-camera me-2 text-success"></i><span class="small">Evidências</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-md-6">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white py-2">
+        <span class="fw-semibold small">Avaliações por terneira</span>
+      </div>
+      <div class="list-group list-group-flush">
+        <a href="{% url 'bem_estar_animal:lista_ambiente' %}" class="list-group-item list-group-item-action py-2">
+          <i class="bi bi-house me-2 text-primary"></i><span class="small">Ambiente</span>
+          <span class="badge text-bg-secondary float-end">{{ total_ambiente }}</span>
+        </a>
+        <a href="{% url 'bem_estar_animal:lista_comportamento' %}" class="list-group-item list-group-item-action py-2">
+          <i class="bi bi-emoji-smile me-2 text-info"></i><span class="small">Comportamento</span>
+          <span class="badge text-bg-secondary float-end">{{ total_comportamento }}</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
