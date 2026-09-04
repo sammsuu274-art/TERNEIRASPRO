@@ -72,3 +72,6 @@ Thumbs.db
 *.temp
 .tmp/
 tmp/
+
+# Large documentation files (PDFs)
+docs/*.pdf
